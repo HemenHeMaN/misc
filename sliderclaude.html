@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Tag/Nacht-Schalter</title>
+<style>
+  :root {
+    --page-bg: #e9f4fd;
+    --page-fg: #16324a;
+    --muted: #5b7a94;
+    box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  html { scroll-padding-top: env(safe-area-inset-top, 0px); height: 100%; }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --page-bg: #0d1030;
+      --page-fg: #e8ecff;
+      --muted: #9aa4d6;
+    }
+  }
+  :root[data-theme="dark"] {
+    --page-bg: #0d1030;
+    --page-fg: #e8ecff;
+    --muted: #9aa4d6;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    min-height: 100%;
+    display: grid;
+    place-items: center;
+    align-content: center;
+    gap: 22px;
+    padding: 24px;
+    background: var(--page-bg);
+    color: var(--page-fg);
+    font-family: "Trebuchet MS", "Segoe UI", system-ui, sans-serif;
+    transition: background .6s ease, color .6s ease;
+  }
+  .no-anim *, .no-anim *::before, .no-anim, .no-anim body { transition: none !important; }
+
+  /* ---------- Schalter ---------- */
+  .dn {
+    position: relative;
+    display: inline-block;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .dn input {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    opacity: 0;
+    cursor: pointer;
+    z-index: 3;
+  }
+
+  .track {
+    --w: 220px;   /* Breite  */
+    --h: 96px;    /* Höhe    */
+    --k: 72px;    /* Knopf   */
+    --pad: 12px;  /* Abstand */
+    position: relative;
+    display: block;
+    width: var(--w);
+    height: var(--h);
+    border-radius: var(--h);
+    overflow: hidden;
+    background: linear-gradient(180deg, #3fa9f5 0%, #8fd3ff 100%);
+    box-shadow: inset 0 4px 10px rgba(0,0,0,.28), 0 6px 18px rgba(0,0,0,.18);
+  }
+  /* Nachthimmel blendet über den Tageshimmel */
+  .track::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, #080a22 0%, #232a63 100%);
+    opacity: 0;
+    transition: opacity .6s ease;
+  }
+  .dn input:checked + .track::before { opacity: 1; }
+  .dn input:focus-visible + .track { outline: 3px solid #ffd43b; outline-offset: 4px; }
+
+  /* Wolken */
+  .clouds {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    transition: transform .7s cubic-bezier(.5, 0, .3, 1), opacity .5s ease;
+  }
+  .clouds svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+    animation: drift 7s ease-in-out infinite alternate;
+  }
+  .dn input:checked + .track .clouds { transform: translateY(80px); opacity: 0; }
+  @keyframes drift { from { transform: translateX(-4px); } to { transform: translateX(5px); } }
+
+  /* Sterne */
+  .stars {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    opacity: 0;
+    transform: translateY(-40px);
+    transition: transform .7s cubic-bezier(.5, 0, .3, 1), opacity .5s ease;
+  }
+  .dn input:checked + .track .stars { opacity: 1; transform: none; }
+  .star, .dot {
+    position: absolute;
+    width: var(--s);
+    height: var(--s);
+    background: #fff;
+    animation: twinkle 2.6s ease-in-out infinite;
+    animation-delay: var(--d);
+  }
+  .star { clip-path: polygon(50% 0, 60% 40%, 100% 50%, 60% 60%, 50% 100%, 40% 60%, 0 50%, 40% 40%); }
+  .dot { border-radius: 50%; }
+  @keyframes twinkle {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: .35; transform: scale(.7); }
+  }
+
+  /* Knopf mit Sonne / Halbmond */
+  .knob {
+    position: absolute;
+    z-index: 2;
+    top: var(--pad);
+    left: var(--pad);
+    width: var(--k);
+    height: var(--k);
+    transition: transform .7s cubic-bezier(.68, -.3, .27, 1.3);
+  }
+  .dn input:checked + .track .knob {
+    transform: translateX(calc(var(--w) - var(--k) - 2 * var(--pad)));
+  }
+
+  .sun, .moon {
+    position: absolute;
+    border-radius: 50%;
+    transition: transform .7s ease, opacity .45s ease;
+  }
+  .sun {
+    inset: 0;
+    background: radial-gradient(circle at 35% 35%, #fff7b0 0%, #ffd43b 55%, #ffb703 100%);
+    box-shadow:
+      0 0 0 10px rgba(255,255,255,.20),
+      0 0 0 22px rgba(255,255,255,.12),
+      0 0 0 36px rgba(255,255,255,.07);
+  }
+  .moon {
+    inset: 8px;
+    background: transparent;
+    box-shadow: inset 15px -5px 0 0 #f6f2c8;   /* Halbmond */
+    filter: drop-shadow(0 0 8px rgba(255, 246, 190, .55));
+    opacity: 0;
+    transform: rotate(-80deg) scale(.4);
+  }
+  .dn input:checked + .track .sun  { opacity: 0; transform: rotate(80deg) scale(.4); }
+  .dn input:checked + .track .moon { opacity: 1; transform: rotate(0) scale(1); }
+
+  .label { text-align: center; }
+  .label strong { display: block; font-size: 1.35rem; letter-spacing: .01em; }
+  .label span { color: var(--muted); font-size: .95rem; }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { transition: none !important; animation: none !important; }
+  }
+</style>
+</head>
+<body class="no-anim">
+
+  <label class="dn">
+    <input type="checkbox" id="dn" role="switch" aria-label="Nachtmodus">
+    <span class="track">
+
+      <span class="stars" aria-hidden="true">
+        <i class="star" style="left:10%; top:20%; --s:14px; --d:0s"></i>
+        <i class="star" style="left:22%; top:60%; --s:9px;  --d:.6s"></i>
+        <i class="star" style="left:33%; top:16%; --s:8px;  --d:1.2s"></i>
+        <i class="star" style="left:41%; top:48%; --s:16px; --d:.3s"></i>
+        <i class="star" style="left:53%; top:72%; --s:8px;  --d:1.8s"></i>
+        <i class="star" style="left:54%; top:22%; --s:11px; --d:.9s"></i>
+        <i class="dot"  style="left:17%; top:42%; --s:4px;  --d:1.5s"></i>
+        <i class="dot"  style="left:29%; top:82%; --s:4px;  --d:.2s"></i>
+        <i class="dot"  style="left:47%; top:12%; --s:3px;  --d:2.1s"></i>
+        <i class="dot"  style="left:36%; top:70%; --s:3px;  --d:1s"></i>
+      </span>
+
+      <span class="clouds" aria-hidden="true">
+        <svg viewBox="0 0 220 96" preserveAspectRatio="xMidYMid slice">
+          <!-- hintere Wolken -->
+          <g fill="#ffffff" opacity=".6">
+            <circle cx="100" cy="86" r="14"/>
+            <circle cx="118" cy="78" r="17"/>
+            <circle cx="138" cy="86" r="14"/>
+            <rect x="96" y="84" width="56" height="16"/>
+            <circle cx="176" cy="24" r="9"/>
+            <circle cx="190" cy="18" r="12"/>
+            <circle cx="204" cy="25" r="9"/>
+            <rect x="172" y="24" width="38" height="10" rx="5"/>
+          </g>
+          <!-- vordere Wolke -->
+          <g fill="#ffffff">
+            <circle cx="150" cy="94" r="20"/>
+            <circle cx="174" cy="80" r="24"/>
+            <circle cx="198" cy="90" r="20"/>
+            <circle cx="126" cy="98" r="16"/>
+            <rect x="120" y="88" width="100" height="14"/>
+          </g>
+        </svg>
+      </span>
+
+      <span class="knob">
+        <span class="sun"></span>
+        <span class="moon"></span>
+      </span>
+
+    </span>
+  </label>
+
+  <div class="label" aria-live="polite">
+    <strong id="mode">Tag</strong>
+    <span id="hint">Tippe auf den Schalter, um zu wechseln.</span>
+  </div>
+
+<script>
+  (function () {
+    var root = document.documentElement;
+    var cb = document.getElementById('dn');
+    var mode = document.getElementById('mode');
+
+    function apply() {
+      root.setAttribute('data-theme', cb.checked ? 'dark' : 'light');
+      mode.textContent = cb.checked ? 'Nacht' : 'Tag';
+    }
+
+    var dark = false;
+    try { dark = window.matchMedia('(prefers-color-scheme: dark)').matches; } catch (e) {}
+    cb.checked = dark;
+    apply();
+    cb.addEventListener('change', apply);
+
+    // Anfangszustand ohne Animation setzen, danach Übergänge erlauben
+    requestAnimationFrame(function () {
+      requestAnimationFrame(function () { document.body.classList.remove('no-anim'); });
+    });
+  })();
+</script>
+</body>
+</html>
