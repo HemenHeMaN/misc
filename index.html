@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Seitenübersicht</title>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 2rem; background: #0d1117; color: #c9d1d9; }
+    h1 { color: #58a6ff; }
+    ul { list-style: none; padding: 0; }
+    li { margin: 0.5rem 0; }
+    a { color: #58a6ff; text-decoration: none; font-size: 1.1rem; }
+    a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+
+  <h1>Inhaltsverzeichnis</h1>
+  <ul id="file-list">Lade Seiten...</ul>
+
+  <script>
+    // PASSE DIESE BEIDEN VARIABLEN AN:
+    const USERNAME = 'HemenHeMaN';
+    const REPO = 'misc';
+
+    async function loadHtmlFiles() {
+      const listElement = document.getElementById('file-list');
+      try {
+        const response = await fetch(`https://api.github.com/repos/${USERNAME}/${REPO}/contents/`);
+        if (!response.ok) throw new Error('Fehler beim Laden der Ordnerstruktur');
+        
+        const files = await response.json();
+        listElement.innerHTML = '';
+
+        // Filtert alle HTML-Dateien aus (außer der index.html selbst)
+        const htmlFiles = files.filter(file => file.name.endsWith('.html') && file.name.toLowerCase() !== 'index.html');
+
+        if (htmlFiles.length === 0) {
+          listElement.innerHTML = '<li>Keine weiteren HTML-Seiten gefunden.</li>';
+          return;
+        }
+
+        htmlFiles.forEach(file => {
+          const li = document.createElement('li');
+          const a = document.createElement('a');
+          
+          a.href = file.name;
+          // Formatiert z.B. "meine-seite.html" zu "Meine Seite"
+          a.textContent = file.name.replace('.html', '').replace(/[-_]/g, ' ');
+          
+          li.appendChild(a);
+          listElement.appendChild(li);
+        });
+
+      } catch (error) {
+        listElement.innerHTML = `<li style="color: #f85149;">${error.message}</li>`;
+      }
+    }
+
+    loadHtmlFiles();
+  </script>
+
+</body>
+</html>
