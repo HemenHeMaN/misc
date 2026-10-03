@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="de" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Erweitertes Chart Studio</title>
+    <!-- Tailwind CSS for modern styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Chart.js for data visualization -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- FontAwesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 min-h-screen flex flex-col transition-colors duration-200">
+
+    <!-- Header -->
+    <header class="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 sticky top-0 z-30 shadow-sm transition-colors duration-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="bg-indigo-600 text-white p-2.5 rounded-xl shadow-md">
+                    <i class="fa-solid fa-chart-pie text-lg"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-lg text-slate-900 dark:text-white tracking-tight">Chart Studio Pro</h1>
+                    <p class="text-xs text-slate-500 dark:text-slate-400">Erweiterter interaktiver Diagramm-Generator</p>
+                </div>
+            </div>
+            
+            <div class="flex items-center space-x-2 sm:space-x-3">
+                <!-- Presets Dropdown / Buttons -->
+                <div class="hidden md:flex items-center space-x-2">
+                    <button onclick="loadPreset('budget')" class="px-3 py-1.5 text-xs font-medium text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg transition">
+                        <i class="fa-solid fa-wallet mr-1.5"></i> Budget Vorlage
+                    </button>
+                    <button onclick="loadPreset('survey')" class="px-3 py-1.5 text-xs font-medium text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg transition">
+                        <i class="fa-solid fa-square-poll-vertical mr-1.5"></i> Umfrage
+                    </button>
+                </div>
+
+                <!-- Dark Mode Toggle -->
+                <button onclick="toggleDarkMode()" class="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition" title="Dark Mode umschalten">
+                    <i id="darkModeIcon" class="fa-solid fa-moon text-sm"></i>
+                </button>
+
+                <!-- Share Link Button -->
+                <button onclick="copyShareLink()" class="inline-flex items-center px-3 py-2 bg-indigo-50 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 font-medium text-xs rounded-xl transition" title="Link teilen">
+                    <i class="fa-solid fa-share-nodes mr-1.5"></i> <span class="hidden sm:inline">Teilen</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Grid -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 grid grid-cols-1 lg:grid-cols-12 gap-8">
+        
+        <!-- Left Panel: Controls, Data & Statistics -->
+        <div class="lg:col-span-6 space-y-6">
+            
+            <!-- Chart Settings Card -->
+            <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 p-6 transition-colors duration-200">
+                <h2 class="text-base font-semibold text-slate-900 dark:text-white mb-4 flex items-center">
+                    <i class="fa-solid fa-sliders text-indigo-600 mr-2"></i> Diagramm Einstellungen
+                </h2>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-2">Diagramm Titel</label>
+                        <input type="text" id="chartTitleInput" value="Meine Ausgaben 2026" oninput="updateChartMeta()" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition">
+                    </div>
+                    
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-2">Diagramm-Typ</label>
+                            <select id="chartTypeSelect" onchange="updateChartType()" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition">
+                                <option value="pie">Torten-Diagramm (Pie)</option>
+                                <option value="doughnut">Donut-Diagramm (Doughnut)</option>
+                                <option value="bar">Balkendiagramm (Bar)</option>
+                                <option value="line">Liniendiagramm (Line)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-2">Legenden-Position</label>
+                            <select id="legendPositionSelect" onchange="updateLegendPosition()" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition">
+                                <option value="bottom">Unten</option>
+                                <option value="right">Rechts</option>
+                                <option value="top">Oben</option>
+                                <option value="none">Ausblenden</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-2">Sortierung</label>
+                            <select id="sortSelect" onchange="sortData()" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition">
+                                <option value="none">Manuell</option>
+                                <option value="value-desc">Wert absteigend</option>
+                                <option value="value-asc">Wert aufsteigend</option>
+                                <option value="name-asc">Name (A-Z)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Data Input & Statistics Card -->
+            <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 p-6 transition-colors duration-200">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-base font-semibold text-slate-900 dark:text-white flex items-center">
+                        <i class="fa-solid fa-table-cells text-indigo-600 mr-2"></i> Kategorien & Werte
+                    </h2>
+                    <div class="flex space-x-2">
+                        <button onclick="autoAssignColors()" class="text-xs bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 font-medium px-3 py-1.5 rounded-lg transition flex items-center" title="Farbpalette automatisch vergeben">
+                            <i class="fa-solid fa-wand-magic-sparkles mr-1.5"></i> Farben
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Statistics Bar -->
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5 p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200/80 dark:border-slate-700/80 text-xs">
+                    <div>
+                        <span class="block text-slate-400 dark:text-slate-400 uppercase font-medium">Gesamt</span>
+                        <span id="statTotal" class="font-bold text-slate-800 dark:text-slate-100 text-sm">0</span>
+                    </div>
+                    <div>
+                        <span class="block text-slate-400 dark:text-slate-400 uppercase font-medium">Durchschnitt</span>
+                        <span id="statAverage" class="font-bold text-slate-800 dark:text-slate-100 text-sm">0</span>
+                    </div>
+                    <div>
+                        <span class="block text-slate-400 dark:text-slate-400 uppercase font-medium">Höchster Wert</span>
+                        <span id="statMax" class="font-bold text-slate-800 dark:text-slate-100 text-sm">0</span>
+                    </div>
+                    <div>
+                        <span class="block text-slate-400 dark:text-slate-400 uppercase font-medium">Kategorien</span>
+                        <span id="statCount" class="font-bold text-slate-800 dark:text-slate-100 text-sm">0</span>
+                    </div>
+                </div>
+
+                <!-- Table -->
+                <div class="overflow-x-auto max-h-80 overflow-y-auto pr-1">
+                    <table class="w-full text-left border-collapse" id="dataTable">
+                        <thead>
+                            <tr class="border-b border-slate-200 dark:border-slate-800 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">
+                                <th class="pb-3 w-10">Farbe</th>
+                                <th class="pb-3 px-2">Kategorie</th>
+                                <th class="pb-3 px-2 w-28">Wert</th>
+                                <th class="pb-3 px-2 w-20 text-right">% Anteil</th>
+                                <th class="pb-3 text-right w-12">Aktion</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody" class="divide-y divide-slate-100 dark:divide-slate-800 text-sm">
+                            <!-- Rows injected via JS -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3">
+                    <button onclick="addRow()" class="inline-flex items-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium text-xs rounded-xl shadow-sm transition">
+                        <i class="fa-solid fa-plus mr-1.5"></i> Zeile hinzufügen
+                    </button>
+                    <div class="flex items-center space-x-2">
+                        <button onclick="clearAllData()" class="text-xs text-rose-600 hover:text-rose-700 font-medium px-3 py-2 transition" title="Alle Einträge löschen">
+                            <i class="fa-solid fa-trash-can mr-1"></i> Alles löschen
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Import / Export Card -->
+            <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 p-6 transition-colors duration-200">
+                <h2 class="text-base font-semibold text-slate-900 dark:text-white mb-4 flex items-center">
+                    <i class="fa-solid fa-file-arrow-down text-indigo-600 mr-2"></i> Daten Import & Export
+                </h2>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <button onclick="exportJSON()" class="inline-flex items-center justify-center px-4 py-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-medium text-xs rounded-xl transition">
+                        <i class="fa-solid fa-file-code mr-2 text-indigo-600"></i> JSON Export
+                    </button>
+                    <button onclick="exportCSV()" class="inline-flex items-center justify-center px-4 py-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-medium text-xs rounded-xl transition">
+                        <i class="fa-solid fa-file-csv mr-2 text-emerald-600"></i> CSV Export
+                    </button>
+                    <label class="inline-flex items-center justify-center px-4 py-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-medium text-xs rounded-xl transition cursor-pointer">
+                        <i class="fa-solid fa-file-arrow-up mr-2 text-amber-600"></i> JSON Import
+                        <input type="file" id="importFile" accept=".json" onchange="importJSON(event)" class="hidden">
+                    </label>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Right Panel: Live Preview & Image Export -->
+        <div class="lg:col-span-6 flex flex-col space-y-6">
+            
+            <!-- Live Preview Card -->
+            <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 p-6 flex-grow flex flex-col items-center justify-between transition-colors duration-200">
+                <div class="w-full flex items-center justify-between mb-4">
+                    <h3 id="displayTitle" class="font-bold text-lg text-slate-900 dark:text-white tracking-tight">Meine Ausgaben 2026</h3>
+                    <span id="totalSumBadge" class="text-xs bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-semibold px-2.5 py-1 rounded-lg">Summe: 0</span>
+                </div>
+
+                <!-- Canvas Wrapper -->
+                <div class="relative w-full max-w-lg aspect-square flex items-center justify-center p-2 my-auto">
+                    <canvas id="myChart"></canvas>
+                </div>
+
+                <!-- Export Action Bar -->
+                <div class="w-full mt-6 pt-4 border-t border-slate-100 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3">
+                    <div class="text-xs text-emerald-600 dark:text-emerald-400 flex items-center font-medium">
+                        <i class="fa-solid fa-cloud-arrow-down mr-1.5"></i> Autom. im Browser gespeichert
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <button onclick="exportChartPNG()" class="inline-flex items-center px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-medium text-xs rounded-xl shadow-sm transition">
+                            <i class="fa-solid fa-download mr-1.5"></i> Als PNG herunterladen
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- Toast Notification Banner -->
+    <div id="toast" class="fixed bottom-5 right-5 z-50 transform translate-y-24 opacity-0 transition-all duration-300 bg-slate-900 text-white dark:bg-white dark:text-slate-900 px-4 py-3 rounded-xl shadow-xl flex items-center space-x-3 text-sm font-medium">
+        <i id="toastIcon" class="fa-solid fa-circle-check text-emerald-400"></i>
+        <span id="toastMessage">Aktion erfolgreich ausgeführt</span>
+    </div>
+
+    <script>
+        // Default application state
+        let chartData = {
+            title: "Meine Ausgaben 2026",
+            type: "pie",
+            legendPosition: "bottom",
+            sortMode: "none",
+            darkMode: false,
+            items: [
+                { label: "Miete & Wohnen", value: 850, color: "#6366f1" },
+                { label: "Lebensmittel", value: 380, color: "#ec4899" },
+                { label: "Freizeit & Hobbys", value: 200, color: "#8b5cf6" },
+                { label: "Ersparnisse", value: 450, color: "#10b981" },
+                { label: "Sonstiges", value: 120, color: "#f59e0b" }
+            ]
+        };
+
+        let myChartInstance = null;
+
+        const presetColors = [
+            '#6366f1', '#ec4899', '#8b5cf6', '#10b981', '#f59e0b', 
+            '#3b82f6', '#14b8a6', '#f43f5e', '#84cc16', '#a855f7',
+            '#f97316', '#06b6d4', '#d946ef', '#64748b', '#eab308'
+        ];
+
+        // Initialize on load
+        window.addEventListener('DOMContentLoaded', () => {
+            loadInitialState();
+            renderTable();
+            initChart();
+            updateStatistics();
+        });
+
+        // Load state from URL hash or localStorage
+        function loadInitialState() {
+            try {
+                const hash = window.location.hash.substring(1);
+                if (hash) {
+                    const decoded = JSON.parse(decodeURIComponent(atob(hash)));
+                    if (decoded && decoded.items) {
+                        chartData = decoded;
+                        showToast("Daten aus URL-Link geladen!");
+                    }
+                } else {
+                    const saved = localStorage.getItem('chart_studio_data');
+                    if (saved) {
+                        chartData = JSON.parse(saved);
+                    }
+                }
+            } catch (e) {
+                console.error("Konnte Daten nicht laden:", e);
+            }
+
+            // Sync UI inputs with state
+            document.getElementById('chartTitleInput').value = chartData.title || '';
+            document.getElementById('displayTitle').innerText = chartData.title || 'Diagramm';
+            document.getElementById('chartTypeSelect').value = chartData.type || 'pie';
+            document.getElementById('legendPositionSelect').value = chartData.legendPosition || 'bottom';
+            document.getElementById('sortSelect').value = chartData.sortMode || 'none';
+
+            if (chartData.darkMode) {
+                document.documentElement.classList.add('dark');
+                document.getElementById('darkModeIcon').className = "fa-solid fa-sun text-sm";
+            } else {
+                document.documentElement.classList.remove('dark');
+                document.getElementById('darkModeIcon').className = "fa-solid fa-moon text-sm";
+            }
+        }
+
+        // Save state to LocalStorage & URL State
+        function saveState() {
+            try {
+                localStorage.setItem('chart_studio_data', JSON.stringify(chartData));
+            } catch (e) {
+                console.error("Speichern fehlgeschlagen:", e);
+            }
+        }
+
+        // Initialize Chart.js instance
+        function initChart() {
+            const ctx = document.getElementById('myChart').getContext('2d');
+            const isDark = document.documentElement.classList.contains('dark');
+            
+            const isBarOrLine = chartData.type === 'bar' || chartData.type === 'line';
+
+            myChartInstance = new Chart(ctx, {
+                type: chartData.type,
+                data: {
+                    labels: chartData.items.map(i => i.label),
+                    datasets: [{
+                        label: chartData.title,
+                        data: chartData.items.map(i => Number(i.value) || 0),
+                        backgroundColor: chartData.items.map(i => i.color),
+                        borderColor: isBarOrLine ? chartData.items.map(i => i.color) : (isDark ? '#1e293b' : '#ffffff'),
+                        borderWidth: isBarOrLine ? 1 : 2,
+                        hoverOffset: isBarOrLine ? 0 : 6,
+                        tension: 0.2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: isBarOrLine ? {
+                        x: {
+                            grid: { color: isDark ? '#334155' : '#e2e8f0' },
+                            ticks: { color: isDark ? '#94a3b8' : '#64748b', font: { family: 'Inter', size: 11 } }
+                        },
+                        y: {
+                            grid: { color: isDark ? '#334155' : '#e2e8f0' },
+                            ticks: { color: isDark ? '#94a3b8' : '#64748b', font: { family: 'Inter', size: 11 } },
+                            beginAtZero: true
+                        }
+                    } : {},
+                    plugins: {
+                        legend: {
+                            position: chartData.legendPosition,
+                            display: !isBarOrLine && chartData.legendPosition !== 'none',
+                            labels: {
+                                color: isDark ? '#f1f5f9' : '#1e293b',
+                                font: { family: 'Inter', size: 12, weight: 500 },
+                                usePointStyle: true,
+                                pointStyle: 'circle'
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: isDark ? 'rgba(255, 255, 255, 0.95)' : 'rgba(15, 23, 42, 0.9)',
+                            titleColor: isDark ? '#0f172a' : '#ffffff',
+                            bodyColor: isDark ? '#0f172a' : '#ffffff',
+                            titleFont: { family: 'Inter', size: 13, weight: 600 },
+                            bodyFont: { family: 'Inter', size: 13 },
+                            padding: 12,
+                            cornerRadius: 8,
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.label || '';
+                                    let value = context.parsed.y !== undefined ? context.parsed.y : (context.parsed || 0);
+                                    let total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    let percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+                                    return ` ${label}: ${value.toLocaleString()} (${percentage}%)`;
+                                }
+                            }
+                        }
+                    },
+                    animation: {
+                        animateScale: true,
+                        animateRotate: true
+                    }
+                }
+            });
+        }
+
+        // Render input data table with live percentage badges
+        function renderTable() {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+
+            const total = chartData.items.reduce((sum, item) => sum + (Number(item.value) || 0), 0);
+
+            chartData.items.forEach((item, index) => {
+                const percentage = total > 0 ? ((Number(item.value) || 0) / total * 100).toFixed(1) : 0;
+                
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition";
+                tr.innerHTML = `
+                    <td class="py-2.5 pr-2">
+                        <input type="color" value="${item.color}" onchange="updateItemColor(${index}, this.value)" class="w-8 h-8 rounded-lg border border-slate-300 dark:border-slate-700 cursor-pointer p-0.5 bg-white dark:bg-slate-800">
+                    </td>
+                    <td class="py-2.5 px-2">
+                        <input type="text" value="${item.label}" oninput="updateItemLabel(${index}, this.value)" placeholder="Kategorie" class="w-full px-3 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition">
+                    </td>
+                    <td class="py-2.5 px-2">
+                        <input type="number" value="${item.value}" oninput="updateItemValue(${index}, this.value)" placeholder="0" class="w-full px-3 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition">
+                    </td>
+                    <td class="py-2.5 px-2 text-right">
+                        <span class="inline-block px-2 py-1 text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-md">
+                            ${percentage}%
+                        </span>
+                    </td>
+                    <td class="py-2.5 pl-2 text-right">
+                        <button onclick="deleteRow(${index})" class="text-slate-400 hover:text-rose-600 p-1.5 rounded-lg transition" title="Zeile löschen">
+                            <i class="fa-solid fa-trash-can text-xs"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // Update statistics bar
+        function updateStatistics() {
+            const total = chartData.items.reduce((sum, item) => sum + (Number(item.value) || 0), 0);
+            const count = chartData.items.length;
+            const average = count > 0 ? (total / count).toFixed(1) : 0;
+            const max = count > 0 ? Math.max(...chartData.items.map(i => Number(i.value) || 0)) : 0;
+
+            document.getElementById('statTotal').innerText = total.toLocaleString();
+            document.getElementById('statAverage').innerText = Number(average).toLocaleString();
+            document.getElementById('statMax').innerText = max.toLocaleString();
+            document.getElementById('statCount').innerText = count;
+
+            document.getElementById('totalSumBadge').innerText = `Summe: ${total.toLocaleString()}`;
+        }
+
+        // Refresh Chart & Statistics
+        function updateChart() {
+            if (!myChartInstance) return;
+
+            const isDark = document.documentElement.classList.contains('dark');
+            const isBarOrLine = chartData.type === 'bar' || chartData.type === 'line';
+
+            myChartInstance.config.type = chartData.type;
+            myChartInstance.data.labels = chartData.items.map(i => i.label);
+            myChartInstance.data.datasets[0].data = chartData.items.map(i => Number(i.value) || 0);
+            myChartInstance.data.datasets[0].backgroundColor = chartData.items.map(i => i.color);
+            myChartInstance.data.datasets[0].borderColor = isBarOrLine ? chartData.items.map(i => i.color) : (isDark ? '#1e293b' : '#ffffff');
+            myChartInstance.data.datasets[0].borderWidth = isBarOrLine ? 1 : 2;
+            myChartInstance.data.datasets[0].hoverOffset = isBarOrLine ? 0 : 6;
+
+            if (isBarOrLine) {
+                myChartInstance.options.scales = {
+                    x: {
+                        grid: { color: isDark ? '#334155' : '#e2e8f0' },
+                        ticks: { color: isDark ? '#94a3b8' : '#64748b', font: { family: 'Inter', size: 11 } }
+                    },
+                    y: {
+                        grid: { color: isDark ? '#334155' : '#e2e8f0' },
+                        ticks: { color: isDark ? '#94a3b8' : '#64748b', font: { family: 'Inter', size: 11 } },
+                        beginAtZero: true
+                    }
+                };
+                myChartInstance.options.plugins.legend.display = false;
+            } else {
+                myChartInstance.options.scales = {};
+                myChartInstance.options.plugins.legend.display = chartData.legendPosition !== 'none';
+                myChartInstance.options.plugins.legend.position = chartData.legendPosition;
+                myChartInstance.options.plugins.legend.labels.color = isDark ? '#f1f5f9' : '#1e293b';
+            }
+
+            myChartInstance.update();
+            renderTable();
+            updateStatistics();
+            saveState();
+        }
+
+        // Event Handlers for Settings
+        function updateChartMeta() {
+            chartData.title = document.getElementById('chartTitleInput').value;
+            document.getElementById('displayTitle').innerText = chartData.title || 'Diagramm';
+            saveState();
+        }
+
+        function updateChartType() {
+            chartData.type = document.getElementById('chartTypeSelect').value;
+            updateChart();
+        }
+
+        function updateLegendPosition() {
+            chartData.legendPosition = document.getElementById('legendPositionSelect').value;
+            updateChart();
+        }
+
+        function updateItemLabel(index, val) {
+            chartData.items[index].label = val;
+            if (myChartInstance) {
+                myChartInstance.data.labels = chartData.items.map(i => i.label);
+                myChartInstance.update('none');
+            }
+            saveState();
+        }
+
+        function updateItemValue(index, val) {
+            chartData.items[index].value = parseFloat(val) || 0;
+            renderTable();
+            updateStatistics();
+            if (myChartInstance) {
+                myChartInstance.data.datasets[0].data = chartData.items.map(i => Number(i.value) || 0);
+                myChartInstance.update('none');
+            }
+            saveState();
+        }
+
+        function updateItemColor(index, val) {
+            chartData.items[index].color = val;
+            updateChart();
+        }
+
+        function addRow() {
+            const randomColor = presetColors[chartData.items.length % presetColors.length];
+            chartData.items.push({
+                label: "Neue Kategorie",
+                value: 100,
+                color: randomColor
+            });
+            updateChart();
+        }
+
+        function deleteRow(index) {
+            if (chartData.items.length <= 1) {
+                showToast("Mindestens eine Kategorie muss erhalten bleiben.", "error");
+                return;
+            }
+            chartData.items.splice(index, 1);
+            updateChart();
+        }
+
+        function clearAllData() {
+            chartData.items = [{ label: "Kategorie 1", value: 10, color: "#6366f1" }];
+            updateChart();
+            showToast("Alle Daten zurückgesetzt.");
+        }
+
+        function autoAssignColors() {
+            chartData.items.forEach((item, index) => {
+                item.color = presetColors[index % presetColors.length];
+            });
+            updateChart();
+            showToast("Neue Farben automatisch zugewiesen.");
+        }
+
+        // Sorting Logic
+        function sortData() {
+            const mode = document.getElementById('sortSelect').value;
+            chartData.sortMode = mode;
+
+            if (mode === 'value-desc') {
+                chartData.items.sort((a, b) => b.value - a.value);
+            } else if (mode === 'value-asc') {
+                chartData.items.sort((a, b) => a.value - b.value);
+            } else if (mode === 'name-asc') {
+                chartData.items.sort((a, b) => a.label.localeCompare(b.label));
+            }
+            updateChart();
+        }
+
+        // Dark Mode Toggle
+        function toggleDarkMode() {
+            chartData.darkMode = !chartData.darkMode;
+            if (chartData.darkMode) {
+                document.documentElement.classList.add('dark');
+                document.getElementById('darkModeIcon').className = "fa-solid fa-sun text-sm";
+            } else {
+                document.documentElement.classList.remove('dark');
+                document.getElementById('darkModeIcon').className = "fa-solid fa-moon text-sm";
+            }
+            myChartInstance.destroy();
+            initChart();
+            saveState();
+        }
+
+        // Presets
+        function loadPreset(presetName) {
+            if (presetName === 'budget') {
+                chartData.title = "Monatliches Budget";
+                chartData.items = [
+                    { label: "Miete", value: 900, color: "#4f46e5" },
+                    { label: "Lebensmittel", value: 400, color: "#ec4899" },
+                    { label: "Transport", value: 150, color: "#06b6d4" },
+                    { label: "Freizeit", value: 250, color: "#84cc16" },
+                    { label: "Sparen", value: 300, color: "#10b981" }
+                ];
+            } else if (presetName === 'survey') {
+                chartData.title = "Lieblings Programmiersprachen";
+                chartData.items = [
+                    { label: "JavaScript / TS", value: 45, color: "#facc15" },
+                    { label: "Python", value: 30, color: "#3b82f6" },
+                    { label: "Java", value: 12, color: "#f97316" },
+                    { label: "C++", value: 8, color: "#a855f7" },
+                    { label: "Andere", value: 5, color: "#64748b" }
+                ];
+            }
+            document.getElementById('chartTitleInput').value = chartData.title;
+            document.getElementById('displayTitle').innerText = chartData.title;
+            updateChart();
+            showToast("Vorlage erfolgreich geladen!");
+        }
+
+        // Export & Import functions
+        function exportJSON() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(chartData, null, 2));
+            const downloadAnchor = document.createElement('a');
+            downloadAnchor.setAttribute("href", dataStr);
+            downloadAnchor.setAttribute("download", `${chartData.title.toLowerCase().replace(/\s+/g, '-') || 'chart'}-data.json`);
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            downloadAnchor.remove();
+            showToast("JSON-Datei erfolgreich exportiert!");
+        }
+
+        function exportCSV() {
+            let csvContent = "data:text/csv;charset=utf-8,Kategorie,Wert,Farbe\r\n";
+            chartData.items.forEach(item => {
+                csvContent += `"${item.label.replace(/"/g, '""')}",${item.value},"${item.color}"\r\n`;
+            });
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement('a');
+            link.setAttribute('href', encodedUri);
+            link.setAttribute('download', `${chartData.title.toLowerCase().replace(/\s+/g, '-') || 'chart'}-data.csv`);
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            showToast("CSV-Datei erfolgreich exportiert!");
+        }
+
+        function importJSON(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const parsed = JSON.parse(e.target.result);
+                    if (parsed && parsed.items) {
+                        chartData = parsed;
+                        document.getElementById('chartTitleInput').value = chartData.title || '';
+                        document.getElementById('displayTitle').innerText = chartData.title || 'Diagramm';
+                        document.getElementById('chartTypeSelect').value = chartData.type || 'pie';
+                        document.getElementById('legendPositionSelect').value = chartData.legendPosition || 'bottom';
+                        document.getElementById('sortSelect').value = chartData.sortMode || 'none';
+                        updateChart();
+                        showToast("JSON-Daten erfolgreich importiert!");
+                    } else {
+                        showToast("Ungültiges JSON-Format.", "error");
+                    }
+                } catch (err) {
+                    showToast("Fehler beim Lesen der Datei.", "error");
+                }
+            };
+            reader.readAsText(file);
+            event.target.value = '';
+        }
+
+        function copyShareLink() {
+            const encoded = btoa(encodeURIComponent(JSON.stringify(chartData)));
+            const url = `${window.location.origin}${window.location.pathname}#${encoded}`;
+            window.location.hash = encoded;
+
+            const tempInput = document.createElement('input');
+            document.body.appendChild(tempInput);
+            tempInput.value = url;
+            tempInput.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempInput);
+
+            showToast("Teilbarer Link in Zwischenablage kopiert!");
+        }
+
+        function exportChartPNG() {
+            const link = document.createElement('a');
+            link.download = `${chartData.title.toLowerCase().replace(/\s+/g, '-') || 'diagramm'}.png`;
+            link.href = document.getElementById('myChart').toDataURL('image/png');
+            link.click();
+            showToast("Diagramm als PNG heruntergeladen!");
+        }
+
+        // Toast Notification Helper
+        function showToast(message, type = "success") {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toastMessage');
+            const toastIcon = document.getElementById('toastIcon');
+
+            toastMessage.innerText = message;
+            if (type === "error") {
+                toastIcon.className = "fa-solid fa-circle-exclamation text-rose-400";
+            } else {
+                toastIcon.className = "fa-solid fa-circle-check text-emerald-400";
+            }
+
+            toast.classList.remove('translate-y-24', 'opacity-0');
+            setTimeout(() => {
+                toast.classList.add('translate-y-24', 'opacity-0');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
+```
+@@eof

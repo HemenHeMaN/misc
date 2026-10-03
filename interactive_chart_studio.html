@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interaktiver Chart Studio</title>
+    <!-- Tailwind CSS for modern styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js for data visualization -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- FontAwesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
+
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="bg-indigo-600 text-white p-2.5 rounded-xl shadow-md">
+                    <i class="fa-solid fa-chart-pie text-lg"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-lg text-slate-900 tracking-tight">Chart Studio</h1>
+                    <p class="text-xs text-slate-500">Interaktiver Torten- & Donut-Diagramm Generator</p>
+                </div>
+            </div>
+            <div class="flex items-center space-x-3">
+                <button onclick="loadPreset('budget')" class="hidden sm:inline-flex items-center px-3 py-1.5 text-xs font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg transition">
+                    <i class="fa-solid fa-wallet mr-1.5"></i> Budget Vorlage
+                </button>
+                <button onclick="loadPreset('survey')" class="hidden sm:inline-flex items-center px-3 py-1.5 text-xs font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg transition">
+                    <i class="fa-solid fa-square-poll-vertical mr-1.5"></i> Umfrage Vorlage
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 grid grid-cols-1 lg:grid-cols-12 gap-8">
+        
+        <!-- Left Panel: Controls & Data Input -->
+        <div class="lg:col-span-6 space-y-6">
+            
+            <!-- Chart Settings Card -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+                <h2 class="text-base font-semibold text-slate-900 mb-4 flex items-center">
+                    <i class="fa-solid fa-sliders text-indigo-600 mr-2"></i> Diagramm Einstellungen
+                </h2>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-2">Diagramm Titel</label>
+                        <input type="text" id="chartTitleInput" value="Meine Ausgaben 2026" oninput="updateChartMeta()" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition">
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-2">Typ</label>
+                            <select id="chartTypeSelect" onchange="updateChartType()" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition">
+                                <option value="pie">Torten-Diagramm (Pie)</option>
+                                <option value="doughnut">Donut-Diagramm (Doughnut)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-2">Legende Position</label>
+                            <select id="legendPositionSelect" onchange="updateLegendPosition()" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition">
+                                <option value="bottom">Unten</option>
+                                <option value="right">Rechts</option>
+                                <option value="top">Oben</option>
+                                <option value="none">Ausblenden</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Data Input Table Card -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-base font-semibold text-slate-900 flex items-center">
+                        <i class="fa-solid fa-table-cells text-indigo-600 mr-2"></i> Kategorien & Werte
+                    </h2>
+                    <div class="flex space-x-2">
+                        <button onclick="autoAssignColors()" class="text-xs bg-indigo-50 text-indigo-700 hover:bg-indigo-100 font-medium px-3 py-1.5 rounded-lg transition flex items-center">
+                            <i class="fa-solid fa-wand-magic-sparkles mr-1.5"></i> Farben generieren
+                        </button>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse" id="dataTable">
+                        <thead>
+                            <tr class="border-b border-slate-200 text-xs font-semibold text-slate-500 uppercase">
+                                <th class="pb-3 w-10">Farbe</th>
+                                <th class="pb-3 px-2">Kategorie</th>
+                                <th class="pb-3 px-2 w-28">Wert</th>
+                                <th class="pb-3 text-right w-12">Aktion</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody" class="divide-y divide-slate-100 text-sm">
+                            <!-- Rows injected via JS -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="mt-4 pt-4 border-t border-slate-100 flex items-center justify-between">
+                    <button onclick="addRow()" class="inline-flex items-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium text-xs rounded-xl shadow-sm transition">
+                        <i class="fa-solid fa-plus mr-1.5"></i> Zeile hinzufügen
+                    </button>
+                    <button onclick="clearAllData()" class="text-xs text-rose-600 hover:text-rose-700 font-medium px-3 py-2 transition">
+                        <i class="fa-solid fa-trash-can mr-1"></i> Alles löschen
+                    </button>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Right Panel: Live Preview & Export -->
+        <div class="lg:col-span-6 flex flex-col space-y-6">
+            
+            <!-- Live Preview Card -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 flex-grow flex flex-col items-center justify-center relative">
+                <div class="w-full flex items-center justify-between mb-4">
+                    <h3 id="displayTitle" class="font-bold text-lg text-slate-900 tracking-tight">Meine Ausgaben 2026</h3>
+                    <span id="totalSumBadge" class="text-xs bg-slate-100 text-slate-600 font-semibold px-2.5 py-1 rounded-lg">Gesamt: 0</span>
+                </div>
+
+                <!-- Canvas Wrapper -->
+                <div class="relative w-full max-w-md aspect-square flex items-center justify-center p-2">
+                    <canvas id="myChart"></canvas>
+                </div>
+
+                <!-- Export Action Bar -->
+                <div class="w-full mt-6 pt-4 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3">
+                    <div class="text-xs text-slate-500 flex items-center">
+                        <i class="fa-solid fa-circle-check text-emerald-500 mr-1.5"></i> Live Aktualisierung aktiv
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <button onclick="exportChart('png')" class="inline-flex items-center px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white font-medium text-xs rounded-xl shadow-sm transition">
+                            <i class="fa-solid fa-download mr-1.5"></i> Als PNG exportieren
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <script>
+        // Initial dataset state
+        let chartData = {
+            title: "Meine Ausgaben 2026",
+            type: "pie",
+            legendPosition: "bottom",
+            items: [
+                { label: "Miete & Wohnen", value: 850, color: "#6366f1" },
+                { label: "Lebensmittel", value: 380, color: "#ec4899" },
+                { label: "Freizeit & Hobbys", value: 200, color: "#8b5cf6" },
+                { label: "Ersparnisse", value: 450, color: "#10b981" },
+                { label: "Sonstiges", value: 120, color: "#f59e0b" }
+            ]
+        };
+
+        let myChartInstance = null;
+
+        // Nice vibrant color palette generator
+        const presetColors = [
+            '#6366f1', '#ec4899', '#8b5cf6', '#10b981', '#f59e0b', 
+            '#3b82f6', '#14b8a6', '#f43f5e', '#84cc16', '#a855f7'
+        ];
+
+        // Initialize application on load
+        window.addEventListener('DOMContentLoaded', () => {
+            renderTable();
+            initChart();
+            updateTotalSum();
+        });
+
+        function initChart() {
+            const ctx = document.getElementById('myChart').getContext('2d');
+            
+            myChartInstance = new Chart(ctx, {
+                type: chartData.type,
+                data: {
+                    labels: chartData.items.map(i => i.label),
+                    datasets: [{
+                        data: chartData.items.map(i => i.value),
+                        backgroundColor: chartData.items.map(i => i.color),
+                        borderWidth: 2,
+                        borderColor: '#ffffff',
+                        hoverOffset: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: chartData.legendPosition,
+                            display: chartData.legendPosition !== 'none',
+                            labels: {
+                                font: {
+                                    family: 'Inter',
+                                    size: 12,
+                                    weight: 500
+                                },
+                                usePointStyle: true,
+                                pointStyle: 'circle'
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                            titleFont: { family: 'Inter', size: 13, weight: 600 },
+                            bodyFont: { family: 'Inter', size: 13 },
+                            padding: 12,
+                            cornerRadius: 8,
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.label || '';
+                                    let value = context.parsed || 0;
+                                    let total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    let percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+                                    return ` ${label}: ${value} (${percentage}%)`;
+                                }
+                            }
+                        }
+                    },
+                    animation: {
+                        animateScale: true,
+                        animateRotate: true
+                    }
+                }
+            });
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+
+            chartData.items.forEach((item, index) => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50/80 transition";
+                tr.innerHTML = `
+                    <td class="py-2.5 pr-2">
+                        <input type="color" value="${item.color}" onchange="updateItemColor(${index}, this.value)" class="w-8 h-8 rounded-lg border border-slate-300 cursor-pointer p-0.5 bg-white">
+                    </td>
+                    <td class="py-2.5 px-2">
+                        <input type="text" value="${item.label}" oninput="updateItemLabel(${index}, this.value)" placeholder="Kategorie" class="w-full px-3 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition">
+                    </td>
+                    <td class="py-2.5 px-2">
+                        <input type="number" value="${item.value}" oninput="updateItemValue(${index}, this.value)" placeholder="0" class="w-full px-3 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition">
+                    </td>
+                    <td class="py-2.5 pl-2 text-right">
+                        <button onclick="deleteRow(${index})" class="text-slate-400 hover:text-rose-600 p-1.5 rounded-lg transition" title="Zeile löschen">
+                            <i class="fa-solid fa-trash-can text-xs"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function updateChart() {
+            if (!myChartInstance) return;
+            myChartInstance.config.type = chartData.type;
+            myChartInstance.data.labels = chartData.items.map(i => i.label);
+            myChartInstance.data.datasets[0].data = chartData.items.map(i => Number(i.value) || 0);
+            myChartInstance.data.datasets[0].backgroundColor = chartData.items.map(i => i.color);
+            
+            if (chartData.legendPosition === 'none') {
+                myChartInstance.options.plugins.legend.display = false;
+            } else {
+                myChartInstance.options.plugins.legend.display = true;
+                myChartInstance.options.plugins.legend.position = chartData.legendPosition;
+            }
+
+            myChartInstance.update();
+            updateTotalSum();
+        }
+
+        function updateTotalSum() {
+            const total = chartData.items.reduce((sum, item) => sum + (Number(item.value) || 0), 0);
+            document.getElementById('totalSumBadge').innerText = `Gesamt: ${total.toLocaleString()}`;
+        }
+
+        function updateChartMeta() {
+            chartData.title = document.getElementById('chartTitleInput').value;
+            document.getElementById('displayTitle').innerText = chartData.title || 'Diagramm';
+        }
+
+        function updateChartType() {
+            chartData.type = document.getElementById('chartTypeSelect').value;
+            updateChart();
+        }
+
+        function updateLegendPosition() {
+            chartData.legendPosition = document.getElementById('legendPositionSelect').value;
+            updateChart();
+        }
+
+        function updateItemLabel(index, val) {
+            chartData.items[index].label = val;
+            updateChart();
+        }
+
+        function updateItemValue(index, val) {
+            chartData.items[index].value = parseFloat(val) || 0;
+            updateChart();
+        }
+
+        function updateItemColor(index, val) {
+            chartData.items[index].color = val;
+            updateChart();
+        }
+
+        function addRow() {
+            const randomColor = presetColors[Math.floor(Math.random() * presetColors.length)];
+            chartData.items.push({
+                label: "Neue Kategorie",
+                value: 100,
+                color: randomColor
+            });
+            renderTable();
+            updateChart();
+        }
+
+        function deleteRow(index) {
+            if (chartData.items.length <= 1) {
+                showToast("Mindestens eine Kategorie muss erhalten bleiben.");
+                return;
+            }
+            chartData.items.splice(index, 1);
+            renderTable();
+            updateChart();
+        }
+
+        function clearAllData() {
+            chartData.items = [{ label: "Kategorie 1", value: 10, color: "#6366f1" }];
+            renderTable();
+            updateChart();
+        }
+
+        function autoAssignColors() {
+            chartData.items.forEach((item, index) => {
+                item.color = presetColors[index % presetColors.length];
+            });
+            renderTable();
+            updateChart();
+        }
+
+        function loadPreset(presetName) {
+            if (presetName === 'budget') {
+                chartData.title = "Monatliches Budget";
+                chartData.items = [
+                    { label: "Miete", value: 900, color: "#4f46e5" },
+                    { label: "Lebensmittel", value: 400, color: "#ec4899" },
+                    { label: "Transport", value: 150, color: "#06b6d4" },
+                    { label: "Freizeit", value: 250, color: "#84cc16" },
+                    { label: "Sparen", value: 300, color: "#10b981" }
+                ];
+            } else if (presetName === 'survey') {
+                chartData.title = "Lieblings Programmiersprachen";
+                chartData.items = [
+                    { label: "JavaScript / TypeScript", value: 45, color: "#facc15" },
+                    { label: "Python", value: 30, color: "#3b82f6" },
+                    { label: "Java", value: 12, color: "#f97316" },
+                    { label: "C++", value: 8, color: "#a855f7" },
+                    { label: "Andere", value: 5, color: "#64748b" }
+                ];
+            }
+            document.getElementById('chartTitleInput').value = chartData.title;
+            document.getElementById('displayTitle').innerText = chartData.title;
+            renderTable();
+            updateChart();
+        }
+
+        function exportChart(format) {
+            const link = document.createElement('a');
+            link.download = `${chartData.title.toLowerCase().replace(/\s+/g, '-') || 'diagramm'}.png`;
+            link.href = document.getElementById('myChart').toDataURL('image/png');
+            link.click();
+        }
+
+        function showToast(message) {
+            // Simple alert fallback replacement in custom notification banner if needed
+            console.log(message);
+        }
+    </script>
+</body>
+</html>
