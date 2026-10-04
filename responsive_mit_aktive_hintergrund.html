@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Meine Webseite</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700;800&family=DM+Sans:wght@400;500&display=swap">
+<style>
+:root{
+  --bg1:#fff4e3; --bg2:#d9f2ee; --ink:#12343b; --ink2:#3c5d63;
+  --card:rgba(255,255,255,.62); --line:rgba(18,52,59,.12);
+  --b1:#ffb38a; --b2:#7fd8c9; --b3:#c9b8ff; --b4:#ffe08a;
+  --btn:#12343b; --btnink:#fff;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg1:#14262b; --bg2:#1d3a3a; --ink:#f5efe4; --ink2:#b9cfcb;
+    --card:rgba(255,255,255,.08); --line:rgba(255,255,255,.14);
+    --b1:#c0603c; --b2:#2c9a8c; --b3:#6a5bb8; --b4:#b8963a;
+    --btn:#f5efe4; --btnink:#14262b;
+  }
+}
+:root[data-theme="dark"]{
+  --bg1:#14262b; --bg2:#1d3a3a; --ink:#f5efe4; --ink2:#b9cfcb;
+  --card:rgba(255,255,255,.08); --line:rgba(255,255,255,.14);
+  --b1:#c0603c; --b2:#2c9a8c; --b3:#6a5bb8; --b4:#b8963a;
+  --btn:#f5efe4; --btnink:#14262b;
+}
+html{scroll-behavior:smooth;scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;font-family:"DM Sans",system-ui,sans-serif;color:var(--ink);background:linear-gradient(160deg,var(--bg1),var(--bg2));background-attachment:fixed;line-height:1.6;overflow-x:hidden}
+
+/* Lebendiger Hintergrund */
+.bg{position:fixed;inset:0;z-index:-1;overflow:hidden;pointer-events:none}
+.blob{position:absolute;border-radius:50%;filter:blur(60px);opacity:.75;will-change:transform}
+.blob.a{width:55vmax;height:55vmax;background:var(--b1);left:-15vmax;top:-10vmax;animation:drift1 22s ease-in-out infinite alternate}
+.blob.b{width:50vmax;height:50vmax;background:var(--b2);right:-18vmax;top:10vh;animation:drift2 26s ease-in-out infinite alternate}
+.blob.c{width:42vmax;height:42vmax;background:var(--b3);left:10vw;bottom:-18vmax;animation:drift3 30s ease-in-out infinite alternate}
+.blob.d{width:30vmax;height:30vmax;background:var(--b4);right:15vw;bottom:5vh;animation:drift1 34s ease-in-out infinite alternate-reverse}
+@keyframes drift1{to{transform:translate(18vw,14vh) scale(1.2) rotate(40deg)}}
+@keyframes drift2{to{transform:translate(-22vw,18vh) scale(.85)}}
+@keyframes drift3{to{transform:translate(20vw,-16vh) scale(1.25)}}
+canvas#dots{position:absolute;inset:0;width:100%;height:100%}
+.glow{position:absolute;width:40vmax;height:40vmax;left:0;top:0;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.55),transparent 65%);transform:translate(-50%,-50%);opacity:.6;mix-blend-mode:soft-light}
+
+/* Layout */
+main{max-width:1000px;margin:0 auto;padding:0 20px}
+section{min-height:80vh;display:flex;flex-direction:column;justify-content:center;padding:70px 0}
+.hero{min-height:100vh;min-height:100svh;align-items:flex-start}
+h1,h2{font-family:"Bricolage Grotesque",system-ui,sans-serif;line-height:1.05;margin:0 0 .4em;letter-spacing:-.02em}
+h1{font-size:clamp(2.6rem,9vw,5.6rem);font-weight:800;max-width:12ch}
+h2{font-size:clamp(1.8rem,5vw,3rem);font-weight:700}
+p{max-width:56ch;color:var(--ink2);font-size:clamp(1rem,2.4vw,1.2rem)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:18px;margin-top:24px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:24px;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);transition:transform .3s}
+.card:hover{transform:translateY(-6px) rotate(-.6deg)}
+.card h3{margin:0 0 6px;font-family:"Bricolage Grotesque",system-ui,sans-serif;font-size:1.3rem}
+.card p{margin:0;font-size:1rem}
+
+/* Buttons, die beim Scrollen in den Hintergrund verschwinden */
+.fade-btns{display:flex;flex-wrap:wrap;gap:12px;margin-top:28px;position:sticky;top:calc(14px + env(safe-area-inset-top,0px));z-index:5;
+  opacity:var(--o,1);transform:translateY(calc(var(--p,0)*-30px)) scale(calc(1 - var(--p,0)*.25));filter:blur(calc(var(--p,0)*8px));
+  transform-origin:left top;transition:opacity .15s linear}
+.fade-btns[data-hidden="true"]{pointer-events:none}
+.btn{appearance:none;border:0;cursor:pointer;font:500 1rem "DM Sans",system-ui,sans-serif;padding:14px 26px;border-radius:999px;
+  background:var(--btn);color:var(--btnink);position:relative;overflow:hidden;
+  transition:transform .2s,box-shadow .2s;box-shadow:0 8px 24px rgba(18,52,59,.18);text-decoration:none;display:inline-block}
+.btn.alt{background:var(--card);color:var(--ink);border:1px solid var(--line);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+.btn:hover{transform:translateY(-3px) scale(1.04)}
+.btn:active{transform:scale(.96)}
+.btn:focus-visible{outline:3px solid var(--b2);outline-offset:3px}
+.ripple{position:absolute;border-radius:50%;background:rgba(255,255,255,.5);transform:scale(0);animation:rip .6s ease-out forwards;pointer-events:none}
+@keyframes rip{to{transform:scale(4);opacity:0}}
+footer{text-align:center;padding:40px 0 60px;color:var(--ink2)}
+
+@media (prefers-reduced-motion:reduce){
+  .blob{animation:none} html{scroll-behavior:auto} .card:hover{transform:none}
+}
+</style>
+</head>
+<body>
+<div class="bg" aria-hidden="true">
+  <div class="blob a"></div><div class="blob b"></div><div class="blob c"></div><div class="blob d"></div>
+  <canvas id="dots"></canvas>
+  <div class="glow" id="glow"></div>
+</div>
+
+<main>
+  <section class="hero" id="start">
+    <h1>Willkommen auf meiner Seite</h1>
+    <p>Eine einfache, lebendige Webseite für Handy und Desktop. Bewege die Maus oder den Finger und schau, wie der Hintergrund reagiert.</p>
+    <div class="fade-btns" id="btns">
+      <a class="btn" href="#mehr">Mehr erfahren</a>
+      <button class="btn alt" type="button" id="colorBtn">Farben wechseln</button>
+      <a class="btn alt" href="#kontakt">Kontakt</a>
+    </div>
+  </section>
+
+  <section id="mehr">
+    <h2>Was hier passiert</h2>
+    <p>Der Hintergrund bewegt sich ständig langsam. Die Buttons oben werden kleiner, unschärfer und verschwinden, je weiter du nach unten scrollst. Scrolle zurück nach oben und sie kommen wieder.</p>
+    <div class="grid">
+      <div class="card"><h3>Responsiv</h3><p>Passt sich Handy, Tablet und Desktop automatisch an.</p></div>
+      <div class="card"><h3>Lebendig</h3><p>Fließende Farbflächen und kleine schwebende Punkte.</p></div>
+      <div class="card"><h3>Interaktiv</h3><p>Der Hintergrund folgt deiner Maus oder deinem Finger.</p></div>
+    </div>
+  </section>
+
+  <section id="kontakt">
+    <h2>Kontakt</h2>
+    <p>Hier kannst du deinen eigenen Text einfügen, zum Beispiel deine E-Mail-Adresse oder einen Link.</p>
+    <div style="margin-top:20px"><a class="btn" href="#start">Nach oben</a></div>
+  </section>
+</main>
+<footer>© Meine Webseite</footer>
+
+<script>
+(function(){
+  var root=document.documentElement, btns=document.getElementById('btns'), glow=document.getElementById('glow');
+
+  // Buttons beim Scrollen ausblenden (scroll-gekoppelt, umkehrbar)
+  function onScroll(){
+    var h=Math.max(window.innerHeight*0.5,200);
+    var p=Math.min(Math.max(window.scrollY/h,0),1);
+    btns.style.setProperty('--p',p.toFixed(3));
+    btns.style.setProperty('--o',(1-p).toFixed(3));
+    btns.dataset.hidden=p>0.9?'true':'false';
+  }
+  window.addEventListener('scroll',onScroll,{passive:true}); onScroll();
+
+  // Ripple-Effekt
+  document.querySelectorAll('.btn').forEach(function(b){
+    b.addEventListener('pointerdown',function(e){
+      var r=b.getBoundingClientRect(), s=Math.max(r.width,r.height)/2, d=document.createElement('span');
+      d.className='ripple'; d.style.width=d.style.height=s+'px';
+      d.style.left=(e.clientX-r.left-s/2)+'px'; d.style.top=(e.clientY-r.top-s/2)+'px';
+      b.appendChild(d); setTimeout(function(){d.remove()},600);
+    });
+  });
+
+  // Farben wechseln
+  var palettes=[
+    ['#ffb38a','#7fd8c9','#c9b8ff','#ffe08a'],
+    ['#ff9eb5','#9ad0ff','#b7f0b1','#ffd6a5'],
+    ['#8fd3ff','#a7f3d0','#fde68a','#fbb1d1'],
+    ['#ffc29b','#f6a5c0','#a5b4fc','#bde7a8']
+  ], pi=0;
+  document.getElementById('colorBtn').addEventListener('click',function(){
+    pi=(pi+1)%palettes.length;
+    ['--b1','--b2','--b3','--b4'].forEach(function(v,i){root.style.setProperty(v,palettes[pi][i])});
+  });
+
+  // Maus-/Finger-Glow
+  var gx=innerWidth/2, gy=innerHeight/2, tx=gx, ty=gy;
+  function move(e){var t=e.touches?e.touches[0]:e; tx=t.clientX; ty=t.clientY;}
+  addEventListener('pointermove',move,{passive:true});
+  addEventListener('touchmove',move,{passive:true});
+
+  // Schwebende Punkte
+  var cv=document.getElementById('dots'), ctx=cv.getContext('2d'), dots=[], W,H,dpr;
+  function size(){
+    dpr=Math.min(devicePixelRatio||1,2); W=innerWidth; H=innerHeight;
+    cv.width=W*dpr; cv.height=H*dpr; ctx.setTransform(dpr,0,0,dpr,0,0);
+    var n=Math.round(Math.min(W*H/22000,60)); dots=[];
+    for(var i=0;i<n;i++)dots.push({x:Math.random()*W,y:Math.random()*H,r:2+Math.random()*5,vy:.15+Math.random()*.4,ph:Math.random()*6.28});
+  }
+  size(); addEventListener('resize',size);
+  var still=matchMedia('(prefers-reduced-motion:reduce)').matches;
+  function frame(t){
+    gx+=(tx-gx)*.08; gy+=(ty-gy)*.08;
+    glow.style.transform='translate('+gx+'px,'+gy+'px) translate(-50%,-50%)';
+    ctx.clearRect(0,0,W,H);
+    ctx.fillStyle='rgba(255,255,255,.55)';
+    for(var i=0;i<dots.length;i++){
+      var d=dots[i];
+      if(!still){d.y-=d.vy; d.x+=Math.sin(t/1800+d.ph)*.35; if(d.y<-10){d.y=H+10;d.x=Math.random()*W}}
+      ctx.beginPath(); ctx.arc(d.x,d.y,d.r,0,6.283); ctx.fill();
+    }
+    if(!still)requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
