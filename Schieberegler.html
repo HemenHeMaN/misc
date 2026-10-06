@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Schriftgrößen-Steuerung</title>
+    <style>
+        :root {
+            --base-font-size: 16px;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            font-size: var(--base-font-size);
+            line-height: 1.6;
+            color: #333;
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 0 20px;
+            background-color: #f9f9f9;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #eaeaea;
+            padding-bottom: 15px;
+        }
+
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 18px;
+            font-size: 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        /* Schieberegler-Container (standardmäßig versteckt) */
+        .slider-container {
+            display: none;
+            align-items: center;
+            gap: 12px;
+            background: white;
+            padding: 10px 15px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            margin-bottom: 25px;
+        }
+
+        .slider-container.active {
+            display: flex;
+        }
+
+        input[type="range"] {
+            cursor: pointer;
+            width: 150px;
+        }
+
+        main {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        h1 {
+            font-size: 1.8rem;
+            margin-top: 0;
+        }
+
+        p {
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Meine Index-Seite</h1>
+        <button id="toggleBtn">Schriftgröße anpassen</button>
+    </header>
+
+    <!-- Der Schieberegler, der per Button eingeblendet wird -->
+    <div id="sliderBox" class="slider-container">
+        <label for="fontSizeSlider">Schriftgröße:</label>
+        <input type="range" id="fontSizeSlider" min="12" max="28" value="16" step="1">
+        <span id="sizeValue">16px</span>
+    </div>
+
+    <main>
+        <h2>Willkommen!</h2>
+        <p>Klicke oben rechts auf den Button „Schriftgröße anpassen“, um den Schieberegler einzublenden. Mit dem Regler kannst du die Schriftgröße auf dieser gesamten Seite stufenlos verändern.</p>
+        <p>Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua.</p>
+    </main>
+
+    <script>
+        const toggleBtn = document.getElementById('toggleBtn');
+        const sliderBox = document.getElementById('sliderBox');
+        const fontSizeSlider = document.getElementById('fontSizeSlider');
+        const sizeValue = document.getElementById('sizeValue');
+
+        // Button-Klick: Schieberegler ein-/ausblenden
+        toggleBtn.addEventListener('click', () => {
+            sliderBox.classList.toggle('active');
+        });
+
+        // Regler-Bewegung: Schriftgröße dynamisch anpassen
+        fontSizeSlider.addEventListener('input', (e) => {
+            const newSize = e.target.value + 'px';
+            document.documentElement.style.setProperty('--base-font-size', newSize);
+            sizeValue.textContent = newSize;
+        });
+    </script>
+
+</body>
+</html>
