@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Karteikarten – Rommé</title>
+<style>
+:root{--felt:#1f6b48;--felt2:#144c33;--card:#fffdf6;--ink:#1f2430;--red:#c8302f;--muted:#cfe8da;--backc:#f1ead6;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--felt:#16503a;--felt2:#0c2f21;--card:#f4f0e2;--backc:#e6dec6}}
+:root[data-theme="dark"]{--felt:#16503a;--felt2:#0c2f21;--card:#f4f0e2;--backc:#e6dec6}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--felt2);font-family:Georgia,"Times New Roman",serif;color:var(--muted);overflow-x:hidden}
+.wrap{position:relative}
+.stage{position:sticky;top:0;height:100vh;overflow:hidden;background:radial-gradient(ellipse at 50% 40%,var(--felt) 0%,var(--felt2) 80%)}
+.title{position:absolute;top:calc(env(safe-area-inset-top,0px) + 22px);left:0;right:0;text-align:center;font-family:system-ui,sans-serif;font-size:.85rem;letter-spacing:.08em;opacity:.85;padding:0 16px}
+.title b{display:block;font:700 1.6rem Georgia,serif;letter-spacing:0;color:#fff;margin-bottom:4px}
+.card{--w:min(270px,66vw);position:absolute;left:50%;top:52%;width:var(--w);height:calc(var(--w)*1.4);transform-origin:50% 150%;cursor:pointer;will-change:transform,opacity}
+.flip{position:absolute;inset:0;transition:transform .7s cubic-bezier(.2,.8,.2,1);transform-style:preserve-3d}
+.card.open .flip{transform:rotateY(180deg)}
+.face{position:absolute;inset:0;border-radius:18px;background:var(--card);color:var(--ink);box-shadow:0 10px 28px rgba(0,0,0,.4),0 0 0 1px rgba(0,0,0,.12);backface-visibility:hidden;-webkit-backface-visibility:hidden;display:flex;align-items:center;justify-content:center;padding:34px 22px}
+.backf{transform:rotateY(180deg);background:var(--backc)}
+.corner{position:absolute;display:flex;flex-direction:column;align-items:center;line-height:1;font:700 1.35rem Georgia,serif}
+.corner span{font-size:1.25rem;margin-top:3px}
+.tl{top:12px;left:13px}.br{bottom:12px;right:13px;transform:rotate(180deg)}
+.red{color:var(--red)}
+.q{font-size:clamp(1.05rem,4.4vw,1.4rem);line-height:1.3;text-align:center}
+.a{font-size:clamp(1rem,4vw,1.25rem);line-height:1.4;text-align:center}
+.shade{position:absolute;inset:0;border-radius:18px;background:#05160e;pointer-events:none}
+.hint{position:absolute;bottom:calc(env(safe-area-inset-bottom,0px) + 18px);left:0;right:0;text-align:center;font:.78rem system-ui,sans-serif;opacity:.8;padding:0 16px}
+footer{height:30vh;display:flex;align-items:center;justify-content:center;font-family:system-ui,sans-serif;background:var(--felt2)}
+@media (prefers-reduced-motion:reduce){.flip{transition:none}}
+</style>
+</head>
+<body>
+<div class="wrap" id="wrap">
+  <div class="stage">
+    <div class="title"><b>Karteikarten</b>wie eine Hand Rommé · scrollen oder Karte antippen</div>
+    <div id="deck"></div>
+    <div class="hint">Mittlere Karte antippen zum Umdrehen</div>
+  </div>
+</div>
+<footer>Das war's – gut gemacht ✓</footer>
+<script>
+const data=[
+["Hauptstadt von Australien?","Canberra – nicht Sydney oder Melbourne."],
+["Was bedeutet „Carpe diem“?","„Nutze den Tag“ – lateinisch."],
+["Wie viele Knochen hat ein erwachsener Mensch?","206"],
+["Was ist die Lichtgeschwindigkeit im Vakuum?","Ca. 299.792 km/s"],
+["Wer schrieb „Faust“?","Johann Wolfgang von Goethe"],
+["Chemisches Symbol für Gold?","Au (von lat. aurum)"],
+["Wie heißt der größte Planet im Sonnensystem?","Jupiter"],
+["Wann fiel die Berliner Mauer?","9. November 1989"]
+];
+const N=data.length,suits=["♠","♥","♣","♦"],ranks=["A","2","3","4","5","6","7","8","9","10","J","Q","K"];
+const deck=document.getElementById('deck'),wrap=document.getElementById('wrap');
+const cards=data.map((c,i)=>{
+  const s=suits[i%4],red=s==="♥"||s==="♦",r=ranks[i%ranks.length];
+  const el=document.createElement('div');el.className='card';
+  const mark=`<div class="corner ${red?'red':''}">${r}<span>${s}</span></div>`;
+  el.innerHTML=`<div class="flip"><div class="face front">${mark.replace('class="corner','class="corner tl')}${mark.replace('class="corner','class="corner br')}<div class="q"></div></div><div class="face backf"><div class="a"></div></div></div><div class="shade"></div>`;
+  el.querySelector('.q').textContent=c[0];el.querySelector('.a').textContent=c[1];
+  el.addEventListener('click',()=>{
+    if(Math.abs(i-smooth)<0.35)el.classList.toggle('open');
+    else window.scrollTo({top:wrapTop+(i/(N-1))*(wrapH-vh),behavior:'smooth'});
+  });
+  deck.appendChild(el);return el;
+});
+const clamp=(v,a,b)=>Math.min(b,Math.max(a,v));
+const ease=t=>t*t*(3-2*t);
+let vh=innerHeight,vw=innerWidth,wrapTop=0,wrapH=0,smooth=0,running=false;
+const calm=matchMedia('(prefers-reduced-motion:reduce)').matches;
+function measure(){
+  vh=innerHeight;vw=innerWidth;
+  wrap.style.height=((N-1)*70/100*vh+vh)+'px';
+  const r=wrap.getBoundingClientRect();wrapTop=r.top+scrollY;wrapH=r.height;
+}
+const target=()=>clamp((scrollY-wrapTop)/(wrapH-vh),0,1)*(N-1);
+function render(){
+  const gap1=Math.min(vw*0.3,170),gap2=30;
+  cards.forEach((el,i)=>{
+    const o=i-smooth,a=Math.abs(o),sg=Math.sign(o)||1;
+    const near=Math.min(a,1),far=Math.max(a-1,0);
+    const x=sg*(gap1*near+gap2*far);
+    const rot=sg*(9*near+3*far);
+    const y=near*18+far*6;
+    const sc=1-0.16*near-0.01*far;
+    const op=o>0?clamp((5.2-o)/1.6,0,1):clamp(1-(a-3.5)/1.2,0,1);
+    el.style.opacity=op.toFixed(3);
+    el.style.zIndex=Math.round(1000-a*10);
+    el.style.transform=`translate(-50%,-50%) translate(${x.toFixed(1)}px,${y.toFixed(1)}px) rotate(${rot.toFixed(2)}deg) scale(${sc.toFixed(3)})`;
+    el.querySelector('.shade').style.opacity=(0.5*ease(near)+0.04*far).toFixed(3);
+    el.style.pointerEvents=op<0.1?'none':'auto';
+    if(a>0.6)el.classList.remove('open');
+  });
+}
+function loop(){
+  const t=target(),d=t-smooth;
+  smooth=calm||Math.abs(d)<0.0005?t:smooth+d*0.12;
+  render();
+  if(smooth!==t)requestAnimationFrame(loop);else running=false;
+}
+function kick(){if(!running){running=true;requestAnimationFrame(loop)}}
+addEventListener('scroll',kick,{passive:true});
+addEventListener('resize',()=>{measure();kick()});
+addEventListener('load',()=>{measure();kick()});
+measure();smooth=target();render();kick();
+</script>
+</body>
+</html>
