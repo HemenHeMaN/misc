@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Karteikarten – fließend</title>
+<style>
+:root{--bg:#eef0f4;--card:#ffffff;--ink:#1f2430;--muted:#7b7f8a;--accent:#5b6cff;--back:#1f2a44;--backink:#f2f4fa;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#101218;--card:#1e222d;--ink:#eef0f5;--muted:#9aa0ae;--accent:#8e9bff;--back:#e8e6f5;--backink:#1a2033}}
+:root[data-theme="dark"]{--bg:#101218;--card:#1e222d;--ink:#eef0f5;--muted:#9aa0ae;--accent:#8e9bff;--back:#e8e6f5;--backink:#1a2033}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:Georgia,"Times New Roman",serif;overflow-x:hidden}
+header{height:60vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px}
+header h1{font-size:clamp(2rem,7vw,3.5rem);margin:0 0 12px}
+header p{color:var(--muted);font-family:system-ui,sans-serif;margin:0}
+.list{padding:0 20px;perspective:1100px}
+.item{height:58vh;min-height:340px;display:flex;align-items:center;justify-content:center;margin-bottom:6vh}
+.card{width:min(520px,100%);height:min(48vh,380px);min-height:280px;position:relative;will-change:transform,opacity,filter;transform-origin:50% 40%;opacity:0}
+.flip{position:absolute;inset:0;transition:transform .7s cubic-bezier(.2,.8,.2,1);transform-style:preserve-3d;cursor:pointer}
+.card.open .flip{transform:rotateY(180deg)}
+.face{position:absolute;inset:0;border-radius:24px;padding:28px;display:flex;flex-direction:column;justify-content:center;backface-visibility:hidden;-webkit-backface-visibility:hidden;box-shadow:0 20px 55px rgba(20,25,50,.18)}
+.front{background:var(--card)}
+.backf{background:var(--back);color:var(--backink);transform:rotateY(180deg)}
+.num{position:absolute;top:20px;left:26px;font:600 .8rem system-ui,sans-serif;letter-spacing:.12em;color:var(--accent)}
+.backf .num{color:inherit;opacity:.7}
+.hint{position:absolute;bottom:18px;left:0;right:0;text-align:center;font:.75rem system-ui,sans-serif;color:var(--muted)}
+.q{font-size:clamp(1.3rem,5vw,1.9rem);line-height:1.3;text-align:center}
+.a{font-size:clamp(1.1rem,4.2vw,1.5rem);line-height:1.4;text-align:center}
+footer{height:40vh;display:flex;align-items:center;justify-content:center;color:var(--muted);font-family:system-ui,sans-serif}
+@media (prefers-reduced-motion:reduce){.flip{transition:none}}
+</style>
+</head>
+<body>
+<header><h1>Karteikarten</h1><p>Einfach weiterscrollen ↓ · Tippe auf eine Karte zum Umdrehen</p></header>
+<main class="list" id="deck"></main>
+<footer>Das war's – gut gemacht ✓</footer>
+<script>
+const cards=[
+["Hauptstadt von Australien?","Canberra – nicht Sydney oder Melbourne."],
+["Was bedeutet „Carpe diem“?","„Nutze den Tag“ – lateinisch."],
+["Wie viele Knochen hat ein erwachsener Mensch?","206"],
+["Was ist die Lichtgeschwindigkeit im Vakuum?","Ca. 299.792 km/s"],
+["Wer schrieb „Faust“?","Johann Wolfgang von Goethe"],
+["Chemisches Symbol für Gold?","Au (von lat. aurum)"],
+["Wie heißt der größte Planet im Sonnensystem?","Jupiter"],
+["Wann fiel die Berliner Mauer?","9. November 1989"]
+];
+const deck=document.getElementById('deck');
+cards.forEach((c,i)=>{
+  const s=document.createElement('section');s.className='item';
+  s.innerHTML=`<div class="card"><div class="flip"><div class="face front"><span class="num">KARTE ${i+1} / ${cards.length}</span><div class="q"></div><span class="hint">Tippen zum Umdrehen</span></div><div class="face backf"><span class="num">ANTWORT</span><div class="a"></div></div></div></div>`;
+  s.querySelector('.q').textContent=c[0];s.querySelector('.a').textContent=c[1];
+  const card=s.querySelector('.card');
+  card.addEventListener('click',()=>card.classList.toggle('open'));
+  deck.appendChild(s);
+});
+const items=[...document.querySelectorAll('.item')];
+const els=items.map(s=>s.querySelector('.card'));
+const clamp=(v,a,b)=>Math.min(b,Math.max(a,v));
+const ease=t=>t*t*(3-2*t);
+let centers=[],vh=innerHeight,smooth=scrollY,running=false;
+const calm=matchMedia('(prefers-reduced-motion:reduce)').matches;
+function measure(){
+  vh=innerHeight;
+  centers=items.map(it=>{const r=it.getBoundingClientRect();return r.top+scrollY+r.height/2});
+}
+function render(){
+  items.forEach((_,i)=>{
+    const d=(centers[i]-smooth-vh*0.5)/vh;      // <0 = oben, >0 = unten
+    const enter=d>0?ease(clamp(1-d/0.6,0,1)):1;  // langsam erscheinen
+    const leave=d<0?ease(clamp(-d/0.65,0,1)):0;  // in den Hintergrund
+    const tilt=(i%2?1:-1)*(1-enter)*4;
+    const y=(1-enter)*70;
+    const scale=(0.88+0.12*enter)*(1-0.16*leave);
+    const el=els[i];
+    el.style.opacity=(enter*(1-0.9*leave)).toFixed(3);
+    el.style.filter=leave>0.02?`blur(${(leave*6).toFixed(2)}px)`:'none';
+    el.style.transform=`translate3d(0,${y.toFixed(1)}px,${(-leave*120).toFixed(1)}px) rotateX(${(leave*10).toFixed(2)}deg) rotateZ(${tilt.toFixed(2)}deg) scale(${scale.toFixed(3)})`;
+  });
+}
+function loop(){
+  const diff=scrollY-smooth;
+  smooth=calm||Math.abs(diff)<0.1?scrollY:smooth+diff*0.1;   // sanftes Nachziehen
+  render();
+  if(smooth!==scrollY)requestAnimationFrame(loop);else running=false;
+}
+function kick(){if(!running){running=true;requestAnimationFrame(loop)}}
+addEventListener('scroll',kick,{passive:true});
+addEventListener('resize',()=>{measure();kick()});
+addEventListener('load',()=>{measure();kick()});
+measure();render();kick();
+</script>
+</body>
+</html>
