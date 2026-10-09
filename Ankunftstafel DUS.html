@@ -1,0 +1,203 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Ankunftstafel DUS</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=B612+Mono:wght@400;700&family=Barlow+Condensed:wght@500;700&display=swap">
+<style>
+  /* Layout: dunkle Flughafentafel, Zeilen im Splitflap-Stil, Amber für Daten, Signalfarben nur für Status */
+  :root {
+    --board: #0c0f14;
+    --panel: #151a22;
+    --flap: #1c222c;
+    --line: #2a313d;
+    --amber: #ffb81c;
+    --text: #e9e6dc;
+    --dim: #8a909c;
+    --ok: #4fd17a;
+    --warn: #ffb81c;
+    --bad: #ff5a4d;
+    --font-display: "Barlow Condensed", "Arial Narrow", sans-serif;
+    --font-data: "B612 Mono", ui-monospace, "Courier New", monospace;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  body {
+    background: var(--board);
+    color: var(--text);
+    font-family: var(--font-data);
+    padding-inline: 16px;
+    padding-block: 20px 40px;
+  }
+  .wrap { max-width: 64rem; margin-inline: auto; }
+
+  header {
+    display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between;
+    gap: 12px 24px; padding-bottom: 16px; border-bottom: 2px solid var(--amber);
+  }
+  h1 {
+    margin: 0; font-family: var(--font-display); font-weight: 700;
+    font-size: clamp(2rem, 6vw, 3.25rem); letter-spacing: .06em; text-transform: uppercase;
+    line-height: 1; text-wrap: balance;
+  }
+  h1 small {
+    display: block; font-size: .42em; font-weight: 500; color: var(--amber);
+    letter-spacing: .18em; margin-bottom: 6px;
+  }
+  .clock {
+    font-size: clamp(1.6rem, 5vw, 2.4rem); font-weight: 700; color: var(--amber);
+    font-variant-numeric: tabular-nums; letter-spacing: .04em; text-align: right;
+  }
+  .clock span { display: block; font-size: .7rem; font-weight: 400; color: var(--dim); letter-spacing: .12em; text-transform: uppercase; }
+
+  .filters { display: flex; flex-wrap: wrap; gap: 8px; margin-block: 16px; }
+  .filters button {
+    font: inherit; font-size: .8rem; letter-spacing: .08em; text-transform: uppercase;
+    background: var(--panel); color: var(--text); border: 1px solid var(--line);
+    padding: 9px 14px; cursor: pointer; border-radius: 2px;
+  }
+  .filters button[aria-pressed="true"] { background: var(--amber); color: #14110a; border-color: var(--amber); font-weight: 700; }
+  .filters button:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
+
+  .row {
+    display: grid; align-items: center; column-gap: 12px;
+    grid-template-columns: 7.5rem minmax(0, 1fr) 5.5rem 5rem 6.5rem 9.5rem;
+    padding: 12px 14px;
+  }
+  .head { color: var(--dim); font-size: .7rem; letter-spacing: .14em; text-transform: uppercase; padding-block: 6px; }
+  .body { display: flex; flex-direction: column; gap: 4px; }
+  .body .row { background: var(--panel); border-left: 4px solid var(--line); }
+  .body .row.s-anflug { border-left-color: var(--ok); }
+  .body .row.s-luft { border-left-color: var(--warn); }
+  .body .row.s-annulliert { border-left-color: var(--bad); }
+  .body .row.s-gelandet { opacity: .55; }
+
+  .flight { font-weight: 700; letter-spacing: .06em; }
+  .city { font-family: var(--font-display); font-size: 1.55rem; font-weight: 500; letter-spacing: .04em; text-transform: uppercase; min-width: 0; overflow-wrap: anywhere; line-height: 1.1; }
+  .city small { font-family: var(--font-data); font-size: .7rem; color: var(--dim); letter-spacing: .08em; margin-left: 6px; }
+  .time {
+    justify-self: start; background: var(--flap); color: var(--amber); font-weight: 700; font-size: 1.15rem;
+    padding: 5px 9px; border-radius: 2px; font-variant-numeric: tabular-nums; letter-spacing: .08em;
+    background-image: linear-gradient(to bottom, transparent calc(50% - 1px), rgba(0,0,0,.55) calc(50% - 1px), rgba(0,0,0,.55) calc(50% + 1px), transparent calc(50% + 1px));
+  }
+  .cancelled .time { color: var(--dim); text-decoration: line-through; }
+  .exit { font-weight: 700; font-size: 1.15rem; }
+  .kind { font-size: .75rem; letter-spacing: .1em; text-transform: uppercase; }
+  .kind.charter { color: var(--amber); }
+  .kind.linie { color: var(--text); }
+  .status { display: flex; align-items: center; gap: 8px; font-size: .78rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--dim); flex: none; }
+  .s-anflug .dot { background: var(--ok); animation: pulse 1.2s steps(2, jump-none) infinite; }
+  .s-luft .dot { background: var(--warn); }
+  .s-annulliert .dot { background: var(--bad); }
+  .s-annulliert .status { color: var(--bad); }
+  .s-anflug .status { color: var(--ok); }
+  .s-luft .status { color: var(--warn); }
+  @keyframes pulse { 50% { opacity: .2; } }
+  @media (prefers-reduced-motion: reduce) { .s-anflug .dot { animation: none; } }
+
+  .empty { padding: 28px 14px; color: var(--dim); background: var(--panel); }
+  footer { margin-top: 18px; color: var(--dim); font-size: .72rem; line-height: 1.6; max-width: 60ch; }
+
+  @media (max-width: 720px) {
+    .head { display: none; }
+    .row {
+      grid-template-columns: 1fr auto auto;
+      grid-template-areas: "flight flight time" "city city city" "exit kind status";
+      row-gap: 8px;
+    }
+    .flight { grid-area: flight; }
+    .time { grid-area: time; justify-self: end; }
+    .city { grid-area: city; font-size: 1.7rem; }
+    .exit { grid-area: exit; font-size: .85rem; }
+    .exit::before { content: "Ausgang "; font-weight: 400; color: var(--dim); }
+    .kind { grid-area: kind; justify-self: start; }
+    .status { grid-area: status; justify-self: end; }
+  }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1><small>Düsseldorf · DUS</small>Ankunft</h1>
+    <div class="clock" id="clock" aria-live="off">--:--<span id="date"></span></div>
+  </header>
+
+  <div class="filters" role="group" aria-label="Filter">
+    <button type="button" id="f-alle" data-f="alle" aria-pressed="true">Alle</button>
+    <button type="button" id="f-linie" data-f="linie" aria-pressed="false">Linie · Ausgang 1–2</button>
+    <button type="button" id="f-charter" data-f="charter" aria-pressed="false">Charter · Ausgang 3–6</button>
+  </div>
+
+  <div class="board">
+    <div class="row head" aria-hidden="true">
+      <div>Flug</div><div>Von</div><div>Erwartet</div><div>Ausgang</div><div>Art</div><div>Status</div>
+    </div>
+    <div class="body" id="body"></div>
+  </div>
+
+  <footer>Beispieldaten. Die Liste steht oben im Skript als Array FLUEGE; Linie und Charter ergeben sich aus dem Ausgang (1–2 Linie, 3–6 Charter).</footer>
+</div>
+
+<script>
+  // Beispieldaten – hier später die Daten aus cache.json einsetzen
+  var FLUEGE = [
+    { nr: "EW 9421", stadt: "Palma de Mallorca", land: "ES", zeit: "10:25", ausgang: 4, status: "anflug" },
+    { nr: "LH 2011", stadt: "München", land: "DE", zeit: "10:40", ausgang: 1, status: "anflug" },
+    { nr: "XQ 541", stadt: "Antalya", land: "TR", zeit: "10:55", ausgang: 5, status: "luft" },
+    { nr: "DE 1636", stadt: "Heraklion (Kreta)", land: "GR", zeit: "11:10", ausgang: 3, status: "luft" },
+    { nr: "KL 1799", stadt: "Amsterdam", land: "NL", zeit: "11:20", ausgang: 2, status: "luft" },
+    { nr: "EW 9487", stadt: "Hurghada", land: "EG", zeit: "11:45", ausgang: 6, status: "annulliert" },
+    { nr: "BA 951", stadt: "London Heathrow", land: "GB", zeit: "12:05", ausgang: 1, status: "luft" },
+    { nr: "PC 3382", stadt: "Istanbul Sabiha Gökçen", land: "TR", zeit: "12:30", ausgang: 2, status: "luft" },
+    { nr: "TB 2214", stadt: "Fuerteventura", land: "ES", zeit: "12:50", ausgang: 4, status: "luft" },
+    { nr: "LH 1105", stadt: "Wien", land: "AT", zeit: "09:55", ausgang: 1, status: "gelandet" }
+  ];
+  var LABEL = { anflug: "Im Anflug", luft: "In der Luft", annulliert: "Annulliert", gelandet: "Gelandet" };
+  var filter = "alle";
+
+  function art(a) { return a <= 2 ? "linie" : "charter"; }
+
+  function render() {
+    var body = document.getElementById("body");
+    var list = FLUEGE.slice().sort(function (a, b) {
+      var ga = a.status === "gelandet" ? 1 : 0, gb = b.status === "gelandet" ? 1 : 0;
+      return ga - gb || a.zeit.localeCompare(b.zeit);
+    }).filter(function (f) { return filter === "alle" || art(f.ausgang) === filter; });
+
+    body.textContent = "";
+    if (!list.length) {
+      var e = document.createElement("div"); e.className = "empty"; e.textContent = "Keine Flüge in dieser Auswahl.";
+      body.appendChild(e); return;
+    }
+    list.forEach(function (f) {
+      var r = document.createElement("div");
+      r.className = "row s-" + f.status + (f.status === "annulliert" ? " cancelled" : "");
+      function cell(cls, html) { var d = document.createElement("div"); d.className = cls; d.innerHTML = html; r.appendChild(d); }
+      cell("flight", f.nr);
+      cell("city", f.stadt + "<small>" + f.land + "</small>");
+      cell("time", f.zeit);
+      cell("exit", f.ausgang);
+      cell("kind " + art(f.ausgang), art(f.ausgang) === "linie" ? "Linie" : "Charter");
+      cell("status", '<span class="dot"></span>' + LABEL[f.status]);
+      body.appendChild(r);
+    });
+  }
+
+  document.querySelectorAll(".filters button").forEach(function (b) {
+    b.addEventListener("click", function () {
+      filter = b.getAttribute("data-f");
+      document.querySelectorAll(".filters button").forEach(function (x) {
+        x.setAttribute("aria-pressed", x === b ? "true" : "false");
+      });
+      render();
+    });
+  });
+
+  function tick() {
+    var d = new Date();
+    var t = d.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/Berlin" });
+    document.getElementById("clock").firstChild.nodeValue = t;
+    document.getElementById("date").textContent = d.toLocaleDateString("de-DE", { weekday: "long", day: "2-digit", month: "long", timeZone: "Europe/Berlin" });
+  }
+  tick(); setInterval(tick, 15000);
+  render();
+</script>
+
+</body></html>
