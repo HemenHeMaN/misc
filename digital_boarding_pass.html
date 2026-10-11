@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Digital Boarding Pass</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace']
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- QRCode Generator library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <style>
+        .perspective-1000 {
+            perspective: 1000px;
+        }
+        .transform-style-3d {
+            transform-style: preserve-3d;
+        }
+        .backface-hidden {
+            backface-visibility: hidden;
+        }
+        .rotate-y-180 {
+            transform: rotateY(180deg);
+        }
+        /* Perforation effect */
+        .perforation-vertical {
+            background-image: radial-gradient(circle, transparent 5px, currentColor 5px);
+            background-size: 16px 16px;
+            background-position: right;
+            background-repeat: repeat-y;
+        }
+        @media (max-width: 768px) {
+            .perforation-vertical {
+                background-image: radial-gradient(circle, transparent 5px, currentColor 5px);
+                background-size: 16px 16px;
+                background-position: bottom;
+                background-repeat: repeat-x;
+            }
+        }
+    </style>
+</head>
+<body class="bg-slate-100 dark:bg-slate-900 text-slate-800 dark:text-slate-100 min-h-screen flex flex-col justify-between font-sans transition-colors duration-300">
+
+    <header class="w-full py-4 px-6 bg-white/80 dark:bg-slate-800/80 backdrop-blur-md shadow-sm sticky top-0 z-50 flex justify-between items-center">
+        <div class="flex items-center space-x-2">
+            <div class="bg-indigo-600 text-white p-2 rounded-xl">
+                <i class="fa-solid fa-plane-departure text-lg"></i>
+            </div>
+            <span class="font-bold text-lg tracking-tight">SkyPass <span class="text-indigo-600 dark:text-indigo-400">Digital</span></span>
+        </div>
+        
+        <div class="flex items-center space-x-3">
+            <!-- Theme Toggle -->
+            <button onclick="toggleDarkMode()" class="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 transition" title="Toggle Theme">
+                <i id="themeIcon" class="fa-solid fa-moon"></i>
+            </button>
+            <!-- Customizer Toggle -->
+            <button onclick="toggleModal('customizerModal')" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl text-sm font-medium transition flex items-center space-x-2">
+                <i class="fa-solid fa-sliders"></i>
+                <span class="hidden sm:inline">Customize</span>
+            </button>
+        </div>
+    </header>
+
+    <main class="flex-grow flex flex-col items-center justify-center p-4 sm:p-6 md:p-8 max-w-5xl mx-auto w-full">
+        
+        <!-- Controls Bar -->
+        <div class="w-full flex flex-wrap justify-between items-center mb-6 gap-3">
+            <div class="flex items-center space-x-2">
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300">
+                    <span class="w-2 h-2 mr-1.5 bg-emerald-500 rounded-full animate-pulse"></span>
+                    Confirmed & Valid
+                </span>
+                <span id="passClassBadge" class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300">
+                    First Class
+                </span>
+            </div>
+            <div class="flex items-center space-x-2">
+                <button onclick="flipCard()" class="text-xs sm:text-sm font-medium bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 px-3.5 py-2 rounded-xl shadow-sm transition flex items-center space-x-2">
+                    <i class="fa-solid fa-rotate text-indigo-500"></i>
+                    <span>Flip Pass</span>
+                </button>
+                <button onclick="downloadPass()" class="text-xs sm:text-sm font-medium bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl shadow-md transition flex items-center space-x-2">
+                    <i class="fa-solid fa-download"></i>
+                    <span>Save Pass</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- 3D Boarding Pass Card Wrapper -->
+        <div class="w-full perspective-1000">
+            <div id="boardingPassCard" class="w-full relative transition-transform duration-700 transform-style-3d shadow-2xl rounded-3xl">
+                
+                <!-- FRONT OF THE BOARDING PASS -->
+                <div id="passFront" class="w-full bg-white dark:bg-slate-800 rounded-3xl overflow-hidden border border-slate-200/80 dark:border-slate-700/80 backface-hidden flex flex-col md:flex-row">
+                    
+                    <!-- Main Ticket Stub (Left Side) -->
+                    <div class="flex-grow p-6 sm:p-8 flex flex-col justify-between perforation-vertical text-slate-800 dark:text-slate-100">
+                        
+                        <!-- Airline & Flight Header -->
+                        <div class="flex justify-between items-start border-b border-slate-100 dark:border-slate-700 pb-5">
+                            <div class="flex items-center space-x-3">
+                                <div id="airlineLogoBg" class="w-12 h-12 rounded-2xl bg-indigo-600 text-white flex items-center justify-center text-xl font-black shadow-md">
+                                    LH
+                                </div>
+                                <div>
+                                    <h2 id="airlineName" class="font-bold text-lg leading-tight">Lufthansa</h2>
+                                    <p class="text-xs text-slate-400 dark:text-slate-400 tracking-wider uppercase font-mono">Electronic Ticket</p>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <span class="text-xs text-slate-400 dark:text-slate-400 uppercase tracking-widest block font-medium">Flight</span>
+                                <span id="flightNumber" class="text-xl sm:text-2xl font-black font-mono tracking-tight text-indigo-600 dark:text-indigo-400">LH400</span>
+                            </div>
+                        </div>
+
+                        <!-- Passenger & Route Body -->
+                        <div class="py-6 grid grid-cols-2 sm:grid-cols-4 gap-6">
+                            <!-- Passenger Name -->
+                            <div class="col-span-2">
+                                <span class="text-xs text-slate-400 dark:text-slate-400 uppercase tracking-widest block font-medium mb-1">Passenger Name</span>
+                                <span id="passengerName" class="text-lg sm:text-xl font-bold tracking-tight truncate block">MR. ALEXANDER SMITH</span>
+                            </div>
+                            
+                            <!-- Date -->
+                            <div>
+                                <span class="text-xs text-slate-400 dark:text-slate-400 uppercase tracking-widest block font-medium mb-1">Date</span>
+                                <span id="flightDate" class="text-base sm:text-lg font-semibold font-mono">15 OCT 2026</span>
+                            </div>
+
+                            <!-- Boarding Time -->
+                            <div>
+                                <span class="text-xs text-slate-400 dark:text-slate-400 uppercase tracking-widest block font-medium mb-1">Boarding Time</span>
+                                <span id="boardingTime" class="text-base sm:text-lg font-bold font-mono text-emerald-600 dark:text-emerald-400">10:15 AM</span>
+                            </div>
+                        </div>
+
+                        <!-- Airports Route Section -->
+                        <div class="bg-slate-50 dark:bg-slate-900/50 p-4 sm:p-5 rounded-2xl flex items-center justify-between my-2">
+                            <div class="text-left">
+                                <span id="originCode" class="text-2xl sm:text-3xl font-black font-mono tracking-wider block">FRA</span>
+                                <span id="originCity" class="text-xs text-slate-500 dark:text-slate-400 font-medium">Frankfurt</span>
+                                <span id="departureTime" class="text-xs font-mono text-indigo-600 dark:text-indigo-400 font-bold block mt-1">11:00 AM</span>
+                            </div>
+                            
+                            <div class="flex flex-col items-center px-4">
+                                <span id="flightDuration" class="text-[10px] text-slate-400 dark:text-slate-500 font-mono mb-1">8h 15m</span>
+                                <div class="w-24 sm:w-36 flex items-center">
+                                    <div class="h-[2px] bg-slate-300 dark:bg-slate-700 flex-grow"></div>
+                                    <i class="fa-solid fa-plane text-indigo-500 mx-2 transform rotate-90 sm:rotate-0"></i>
+                                    <div class="h-[2px] bg-slate-300 dark:bg-slate-700 flex-grow"></div>
+                                </div>
+                                <span class="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium mt-1">Non-stop</span>
+                            </div>
+
+                            <div class="text-right">
+                                <span id="destinationCode" class="text-2xl sm:text-3xl font-black font-mono tracking-wider block">JFK</span>
+                                <span id="destinationCity" class="text-xs text-slate-500 dark:text-slate-400 font-medium">New York</span>
+                                <span id="arrivalTime" class="text-xs font-mono text-indigo-600 dark:text-indigo-400 font-bold block mt-1">01:15 PM</span>
+                            </div>
+                        </div>
+
+                        <!-- Footer Meta Details -->
+                        <div class="pt-5 grid grid-cols-3 sm:grid-cols-4 gap-4 border-t border-slate-100 dark:border-slate-700">
+                            <div>
+                                <span class="text-[10px] text-slate-400 dark:text-slate-400 uppercase tracking-widest block font-medium">Gate</span>
+                                <span id="gateNumber" class="text-lg font-bold font-mono">B22</span>
+                            </div>
+                            <div>
+                                <span class="text-[10px] text-slate-400 dark:text-slate-400 uppercase tracking-widest block font-medium">Seat</span>
+                                <span id="seatNumber" class="text-lg font-bold font-mono text-indigo-600 dark:text-indigo-400">12A</span>
+                            </div>
+                            <div>
+                                <span class="text-[10px] text-slate-400 dark:text-slate-400 uppercase tracking-widest block font-medium">Zone</span>
+                                <span id="zoneNumber" class="text-lg font-bold font-mono">1</span>
+                            </div>
+                            <div class="hidden sm:block">
+                                <span class="text-[10px] text-slate-400 dark:text-slate-400 uppercase tracking-widest block font-medium">Class</span>
+                                <span id="classType" class="text-lg font-bold font-mono">First</span>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- Tear-off Stub (Right Side) -->
+                    <div class="w-full md:w-80 bg-slate-50 dark:bg-slate-900/80 p-6 sm:p-8 flex flex-col justify-between border-t md:border-t-0 md:border-l border-slate-200 dark:border-slate-700">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <span class="text-[10px] text-slate-400 dark:text-slate-400 uppercase tracking-widest font-medium">Boarding Pass Stub</span>
+                                <h3 id="stubAirline" class="font-bold text-base text-slate-700 dark:text-slate-200">Lufthansa</h3>
+                            </div>
+                            <span id="stubFlight" class="font-mono font-bold text-sm text-indigo-600 dark:text-indigo-400">LH400</span>
+                        </div>
+
+                        <div class="my-6 space-y-4">
+                            <div class="flex justify-between">
+                                <div>
+                                    <span class="text-[10px] text-slate-400 uppercase tracking-wider block">Passenger</span>
+                                    <span id="stubPassenger" class="font-bold text-sm truncate max-w-[160px] block">ALEXANDER SMITH</span>
+                                </div>
+                                <div class="text-right">
+                                    <span class="text-[10px] text-slate-400 uppercase tracking-wider block">Seat</span>
+                                    <span id="stubSeat" class="font-mono font-bold text-sm text-indigo-600">12A</span>
+                                </div>
+                            </div>
+
+                            <div class="flex justify-between border-t border-slate-200 dark:border-slate-800 pt-3">
+                                <div>
+                                    <span class="text-[10px] text-slate-400 uppercase tracking-wider block">Route</span>
+                                    <span id="stubRoute" class="font-mono font-bold text-sm">FRA - JFK</span>
+                                </div>
+                                <div class="text-right">
+                                    <span class="text-[10px] text-slate-400 uppercase tracking-wider block">Gate Close</span>
+                                    <span id="stubGateClose" class="font-mono font-bold text-sm text-rose-600">09:45 AM</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Barcode / QR Section -->
+                        <div class="flex flex-col items-center justify-center pt-2">
+                            <div id="qrcode" class="bg-white p-2.5 rounded-xl shadow-inner inline-block"></div>
+                            <span class="text-[9px] font-mono text-slate-400 mt-2 tracking-widest">M1SMITH/ALEXANDER E12A</span>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- BACK OF THE BOARDING PASS -->
+                <div id="passBack" class="w-full absolute inset-0 bg-white dark:bg-slate-800 rounded-3xl overflow-hidden border border-slate-200/80 dark:border-slate-700/80 backface-hidden rotate-y-180 p-6 sm:p-10 flex flex-col justify-between hidden">
+                    <div>
+                        <div class="flex justify-between items-center border-b border-slate-100 dark:border-slate-700 pb-4 mb-6">
+                            <div class="flex items-center space-x-2">
+                                <i class="fa-solid fa-suitcase-rolling text-indigo-600 text-xl"></i>
+                                <h3 class="font-bold text-lg">Luggage & Flight Information</h3>
+                            </div>
+                            <span class="text-xs text-slate-400 font-mono">SEC-A8992</span>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                            <div class="bg-slate-50 dark:bg-slate-900/50 p-4 rounded-2xl">
+                                <span class="text-xs text-slate-400 uppercase block font-medium mb-1">Checked Baggage</span>
+                                <span class="text-xl font-black font-mono text-indigo-600 dark:text-indigo-400">2 Pieces Included</span>
+                                <p class="text-xs text-slate-500 mt-1">Max 32kg per piece (First Class allowance).</p>
+                            </div>
+                            <div class="bg-slate-50 dark:bg-slate-900/50 p-4 rounded-2xl">
+                                <span class="text-xs text-slate-400 uppercase block font-medium mb-1">Cabin Baggage</span>
+                                <span class="text-xl font-black font-mono text-indigo-600 dark:text-indigo-400">2 Items Allowed</span>
+                                <p class="text-xs text-slate-500 mt-1">1 Trolley (8kg) + 1 Personal Item.</p>
+                            </div>
+                            <div class="bg-slate-50 dark:bg-slate-900/50 p-4 rounded-2xl">
+                                <span class="text-xs text-slate-400 uppercase block font-medium mb-1">Frequent Flyer</span>
+                                <span class="text-xl font-black font-mono text-amber-500">HONORARY 100K</span>
+                                <p class="text-xs text-slate-500 mt-1">Lufthansa Senator Gold Tier.</p>
+                            </div>
+                        </div>
+
+                        <div class="space-y-3 text-xs text-slate-500 dark:text-slate-400 leading-relaxed border-t border-slate-100 dark:border-slate-700 pt-4">
+                            <p><strong>Conditions of Contract:</strong> Carriage and other services provided by the carrier are subject to conditions of carriage which are hereby incorporated by reference. These conditions may be obtained from the issuing carrier. Passenger is advised to check-in at least 2 hours prior to scheduled departure.</p>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-between items-center pt-6 border-t border-slate-100 dark:border-slate-700 text-xs">
+                        <span class="text-slate-400">SkyPass Secure Validation Code: <span class="font-mono text-indigo-600">#9928-FRA-JFK</span></span>
+                        <button onclick="flipCard()" class="text-indigo-600 hover:underline font-semibold flex items-center space-x-1">
+                            <span>Back to Pass</span>
+                            <i class="fa-solid fa-arrow-right text-[10px]"></i>
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Extra Action Hints -->
+        <p class="text-xs text-slate-400 dark:text-slate-500 mt-6 text-center">
+            Click <strong class="text-slate-600 dark:text-slate-300">"Flip Pass"</strong> to check your luggage allowance or <strong class="text-slate-600 dark:text-slate-300">"Customize"</strong> to edit passenger details and flight numbers.
+        </p>
+
+    </main>
+
+    <div id="customizerModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white dark:bg-slate-800 rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-slate-200 dark:border-slate-700 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="font-bold text-lg flex items-center space-x-2">
+                    <i class="fa-solid fa-sliders text-indigo-600"></i>
+                    <span>Customize Boarding Pass</span>
+                </h3>
+                <button onclick="toggleModal('customizerModal')" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-2">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <form id="passForm" onsubmit="updatePass(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">Passenger Name</label>
+                    <input type="text" id="inputName" value="ALEXANDER SMITH" required class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-sm font-medium focus:outline-none focus:border-indigo-500">
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">Airline</label>
+                        <select id="inputAirline" onchange="onAirlineChange()" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-sm font-medium focus:outline-none focus:border-indigo-500">
+                            <option value="LH|Lufthansa|LH400|bg-indigo-600">Lufthansa (LH)</option>
+                            <option value="BA|British Airways|BA178|bg-blue-700">British Airways (BA)</option>
+                            <option value="EK|Emirates|EK202|bg-rose-600">Emirates (EK)</option>
+                            <option value="AF|Air France|AF006|bg-sky-600">Air France (AF)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">Flight Number</label>
+                        <input type="text" id="inputFlight" value="LH400" required class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-sm font-medium font-mono focus:outline-none focus:border-indigo-500">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">Origin Code (3-Letter)</label>
+                        <input type="text" id="inputOrigin" value="FRA" maxlength="3" required class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-sm font-mono font-medium uppercase focus:outline-none focus:border-indigo-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">Destination Code (3-Letter)</label>
+                        <input type="text" id="inputDestination" value="JFK" maxlength="3" required class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-sm font-mono font-medium uppercase focus:outline-none focus:border-indigo-500">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-3 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">Seat</label>
+                        <input type="text" id="inputSeat" value="12A" required class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-sm font-mono font-medium focus:outline-none focus:border-indigo-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">Gate</label>
+                        <input type="text" id="inputGate" value="B22" required class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-sm font-mono font-medium focus:outline-none focus:border-indigo-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">Class</label>
+                        <select id="inputClass" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-sm font-medium focus:outline-none focus:border-indigo-500">
+                            <option value="First Class">First Class</option>
+                            <option value="Business">Business</option>
+                            <option value="Economy">Economy</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="pt-4 flex justify-end space-x-3">
+                    <button type="button" onclick="toggleModal('customizerModal')" class="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-sm font-medium hover:bg-slate-100 dark:hover:bg-slate-700 transition">Cancel</button>
+                    <button type="submit" class="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium transition shadow-md">Apply Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <footer class="py-6 text-center text-xs text-slate-400 dark:text-slate-500 border-t border-slate-200/60 dark:border-slate-800">
+        <p>&copy; 2026 SkyPass Digital Systems. All rights reserved. Secure Boarding Pass Generator.</p>
+    </footer>
+
+    <script>
+        // Initialize QR Code on load
+        window.onload = function() {
+            generateQRCode("M1SMITH/ALEXANDER E12A LH400 FRAJFK");
+        };
+
+        function generateQRCode(text) {
+            document.getElementById("qrcode").innerHTML = "";
+            new QRCode(document.getElementById("qrcode"), {
+                text: text,
+                width: 90,
+                height: 90,
+                colorDark: "#0f172a",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.M
+            });
+        }
+
+        // Flip Card Logic
+        let isFlipped = false;
+        function flipCard() {
+            const card = document.getElementById("boardingPassCard");
+            const front = document.getElementById("passFront");
+            const back = document.getElementById("passBack");
+            
+            isFlipped = !isFlipped;
+            if (isFlipped) {
+                card.style.transform = "rotateY(180deg)";
+                setTimeout(() => {
+                    front.classList.add("hidden");
+                    back.classList.remove("hidden");
+                }, 150);
+            } else {
+                card.style.transform = "rotateY(0deg)";
+                back.classList.add("hidden");
+                front.classList.remove("hidden");
+            }
+        }
+
+        // Toggle Dark Mode
+        function toggleDarkMode() {
+            const html = document.documentElement;
+            const icon = document.getElementById("themeIcon");
+            html.classList.toggle("dark");
+            if (html.classList.contains("dark")) {
+                icon.className = "fa-solid fa-sun text-amber-400";
+            } else {
+                icon.className = "fa-solid fa-moon text-slate-700";
+            }
+        }
+
+        // Modal Handler
+        function toggleModal(modalId) {
+            const modal = document.getElementById(modalId);
+            modal.classList.toggle("hidden");
+        }
+
+        // Airline Template Selection
+        function onAirlineChange() {
+            const select = document.getElementById("inputAirline");
+            const val = select.value.split("|");
+            document.getElementById("inputFlight").value = val[2];
+        }
+
+        // Update Pass Details from Form
+        function updatePass(event) {
+            event.preventDefault();
+            
+            const name = document.getElementById("inputName").value.toUpperCase();
+            const airlineData = document.getElementById("inputAirline").value.split("|");
+            const airlineCode = airlineData[0];
+            const airlineName = airlineData[1];
+            const airlineBg = airlineData[3];
+            
+            const flight = document.getElementById("inputFlight").value.toUpperCase();
+            const origin = document.getElementById("inputOrigin").value.toUpperCase();
+            const destination = document.getElementById("inputDestination").value.toUpperCase();
+            const seat = document.getElementById("inputSeat").value.toUpperCase();
+            const gate = document.getElementById("inputGate").value.toUpperCase();
+            const passClass = document.getElementById("inputClass").value;
+
+            // Update UI elements
+            document.getElementById("airlineLogoBg").className = `w-12 h-12 rounded-2xl ${airlineBg} text-white flex items-center justify-center text-xl font-black shadow-md`;
+            document.getElementById("airlineLogoBg").innerText = airlineCode;
+            document.getElementById("airlineName").innerText = airlineName;
+            document.getElementById("stubAirline").innerText = airlineName;
+            
+            document.getElementById("flightNumber").innerText = flight;
+            document.getElementById("stubFlight").innerText = flight;
+            
+            document.getElementById("passengerName").innerText = name;
+            document.getElementById("stubPassenger").innerText = name;
+            
+            document.getElementById("originCode").innerText = origin;
+            document.getElementById("destinationCode").innerText = destination;
+            document.getElementById("stubRoute").innerText = `${origin} - ${destination}`;
+            
+            document.getElementById("seatNumber").innerText = seat;
+            document.getElementById("stubSeat").innerText = seat;
+            
+            document.getElementById("gateNumber").innerText = gate;
+            document.getElementById("classType").innerText = passClass.split(" ")[0];
+            document.getElementById("passClassBadge").innerText = passClass;
+
+            // Regenerate QR Code
+            generateQRCode(`M1${name.replace(/\s+/g, '')} E${seat} ${flight} ${origin}${destination}`);
+
+            // Close modal
+            toggleModal('customizerModal');
+        }
+
+        // Download simulation function
+        function downloadPass() {
+            const btnEvent = event.currentTarget;
+            const originalHTML = btnEvent.innerHTML;
+            btnEvent.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i><span>Saving...</span>`;
+            setTimeout(() => {
+                btnEvent.innerHTML = `<i class="fa-solid fa-check"></i><span>Saved to Wallet!</span>`;
+                setTimeout(() => {
+                    btnEvent.innerHTML = originalHTML;
+                }, 2000);
+            }, 1000);
+        }
+    </script>
+</body>
+</html>
