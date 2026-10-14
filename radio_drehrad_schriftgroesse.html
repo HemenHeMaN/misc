@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#202426">
+<title>Schriftgröße – Radio-Drehrad</title>
+<style>
+  :root { color-scheme: light; --ink:#17212c; --muted:#536171; --paper:#f4f5f5; --panel:#202426; }
+  * { box-sizing:border-box; }
+  body {
+    margin:0; background:var(--paper); color:var(--ink);
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+  }
+  header {
+    min-height:76px; padding:18px clamp(18px,5vw,64px);
+    display:flex; align-items:center; justify-content:space-between; gap:16px;
+    color:#f7f7f5; background:linear-gradient(120deg,#171b1d,#303638);
+    box-shadow:0 3px 16px #0002;
+  }
+  .brand { display:flex; align-items:center; gap:13px; font-size:clamp(1.2rem,3vw,1.65rem); font-weight:750; letter-spacing:.01em; }
+  .brand-icon { width:38px; height:30px; border:3px solid #f5f5f0; border-radius:7px; position:relative; }
+  .brand-icon:before { content:""; position:absolute; left:6px; right:6px; top:6px; height:3px; background:#f5f5f0; box-shadow:0 7px #f5f5f0,0 14px #f5f5f0; }
+  .tagline { color:#d5dadd; font-size:.92rem; text-align:right; }
+  main { width:min(920px, calc(100% - 32px)); margin:clamp(30px,6vh,62px) auto 50px; }
+  .intro { text-align:center; }
+  h1 { font-size:clamp(1.8rem,5vw,3rem); line-height:1.12; margin:0 0 16px; letter-spacing:-.035em; }
+  .intro p { max-width:720px; margin:0 auto; color:var(--muted); font-size:1.1rem; line-height:1.65; }
+  .control-area { margin:32px auto 28px; max-width:470px; text-align:center; }
+  .dial-frame {
+    position:relative; display:flex; align-items:center; justify-content:center; gap:22px;
+    width:100%; padding:25px 20px; border-radius:21px;
+    background:linear-gradient(145deg,#3b3d39,#171a19 60%,#303330);
+    border:1px solid #8b8a7b;
+    box-shadow:inset 0 2px 3px #ffffff40,inset 0 -5px 10px #0008,0 7px 15px #0002;
+    user-select:none; -webkit-user-select:none; touch-action:pan-y;
+  }
+  .arrow { color:#e6e1cc; font-size:1.8rem; font-weight:800; flex:0 0 auto; pointer-events:none; text-shadow:0 1px 3px #000; }
+  #dial {
+    position:relative; flex:1; max-width:290px; height:70px; border-radius:16px;
+    border:2px solid #080a09; outline:1px solid #62645b;
+    background:linear-gradient(#050706,#171a18 20%,#252925 48%,#090b0a 85%);
+    box-shadow:inset 0 5px 10px #000,0 2px 3px #ffffff24;
+    cursor:ew-resize; touch-action:pan-y; overflow:hidden;
+  }
+  #dial:before {
+    content:""; position:absolute; inset:8px 10px; border-radius:9px;
+    background:repeating-linear-gradient(90deg,#151817 0 3px,#66695f 4px,#222622 7px,#090b0a 10px);
+    box-shadow:inset 0 2px 5px #000,0 1px 0 #ffffff20;
+    transform:translateX(var(--dial-shift,0px)); pointer-events:none;
+  }
+  #dial:after {
+    content:""; position:absolute; left:12px; right:12px; top:12px; height:9px;
+    border-radius:50%; background:linear-gradient(#ffffff38,transparent); pointer-events:none;
+  }
+  .hint { margin:13px 0 0; color:#66717b; font-size:.92rem; }
+  .readout { margin-top:13px; font-weight:700; color:#293541; font-variant-numeric:tabular-nums; }
+  .sample {
+    background:#fff; border:1px solid #d8dde1; border-radius:18px;
+    padding:clamp(22px,5vw,42px); box-shadow:0 8px 26px #1c27300a;
+    transition:font-size .06s linear;
+  }
+  .sample h2 { font-size:1.45em; margin:0 0 .55em; line-height:1.2; }
+  .sample p { font-size:1em; line-height:1.7; margin:.5em 0 1em; color:#354354; }
+  .sample ul { font-size:1em; line-height:1.8; padding-left:1.35em; margin-bottom:1.3em; }
+  .sample button {
+    font:inherit; font-size:.95em; border:0; border-radius:9px; padding:.7em 1em;
+    background:#26343c; color:#fff; cursor:pointer;
+  }
+  .reset-row { display:flex; justify-content:center; margin-top:18px; }
+  .reset {
+    background:transparent; border:1px solid #b7c0c7; color:#354354;
+    border-radius:999px; padding:10px 16px; font:inherit; cursor:pointer;
+  }
+  .reset:hover { background:#e8ebed; }
+  footer { text-align:center; color:#75808a; font-size:.85rem; padding:0 16px 28px; }
+  @media (max-width:520px) {
+    header { align-items:flex-start; flex-direction:column; gap:6px; }
+    .tagline { text-align:left; }
+    .dial-frame { padding:20px 12px; gap:12px; }
+    #dial { height:64px; }
+    .arrow { font-size:1.5rem; }
+  }
+  @media (prefers-reduced-motion:reduce) { * { transition:none !important; } }
+</style>
+</head>
+<body>
+<header>
+  <div class="brand"><span class="brand-icon" aria-hidden="true"></span><span>Textgröße</span></div>
+  <div class="tagline">Kleine Drehung. Große Wirkung.</div>
+</header>
+<main>
+  <section class="intro">
+    <h1>Schriftgröße mit dem Drehrad</h1>
+    <p>Bewege das waagerechte Rädchen nach links oder rechts – wie bei einem alten Radio. Die Schrift passt sich sofort an.</p>
+  </section>
+
+  <section class="control-area" aria-label="Schriftgröße einstellen">
+    <div class="dial-frame">
+      <span class="arrow" aria-hidden="true">◀</span>
+      <div id="dial" role="slider" tabindex="0" aria-label="Schriftgröße einstellen" aria-valuemin="14" aria-valuemax="26" aria-valuenow="18" aria-valuetext="18 Pixel" title="Mit Maus oder Finger nach links und rechts ziehen"></div>
+      <span class="arrow" aria-hidden="true">▶</span>
+    </div>
+    <div class="hint">Mit Maus oder Finger horizontal ziehen</div>
+    <div class="readout" aria-live="polite">Schriftgröße: <span id="sizeValue">18</span> px</div>
+  </section>
+
+  <article class="sample" id="sample">
+    <h2>Willkommen!</h2>
+    <p>Dies ist ein Beispieltext. Drehe das Rädchen oben, um die Schriftgröße zu verändern. Die Änderung wird sofort sichtbar – auch auf dem Smartphone.</p>
+    <p>So kannst du testen, welche Schriftgröße für dich am angenehmsten zu lesen ist.</p>
+    <ul>
+      <li>Gut lesbarer Beispieltext</li>
+      <li>Überschriften passen sich ebenfalls an</li>
+      <li>Bedienung mit Touchscreen und Maus</li>
+    </ul>
+    <button type="button" id="demoButton">Beispielknopf</button>
+  </article>
+  <div class="reset-row"><button class="reset" type="button" id="reset">↺ Schriftgröße zurücksetzen</button></div>
+</main>
+<footer>Ziehe das Drehrad langsam für kleine Änderungen oder schneller für größere Schritte.</footer>
+<script>
+(() => {
+  const dial = document.getElementById('dial');
+  const sample = document.getElementById('sample');
+  const sizeValue = document.getElementById('sizeValue');
+  const reset = document.getElementById('reset');
+  const min = 14, max = 26, start = 18;
+  let size = start, dragging = false, lastX = 0, accumulated = 0;
+
+  function setSize(next) {
+    size = Math.max(min, Math.min(max, next));
+    sample.style.fontSize = size + 'px';
+    sizeValue.textContent = size;
+    dial.setAttribute('aria-valuenow', size);
+    dial.setAttribute('aria-valuetext', size + ' Pixel');
+    dial.style.setProperty('--dial-shift', ((size - start) * 2.4) + 'px');
+  }
+  dial.addEventListener('pointerdown', e => {
+    dragging = true; lastX = e.clientX; accumulated = 0;
+    dial.setPointerCapture(e.pointerId);
+    dial.classList.add('dragging');
+    e.preventDefault();
+  });
+  dial.addEventListener('pointermove', e => {
+    if (!dragging) return;
+    const dx = e.clientX - lastX;
+    lastX = e.clientX;
+    accumulated += dx;
+    const steps = Math.trunc(accumulated / 7);
+    if (steps !== 0) {
+      setSize(size + steps);
+      accumulated -= steps * 7;
+    }
+  });
+  function stopDrag() { dragging = false; dial.classList.remove('dragging'); }
+  dial.addEventListener('pointerup', stopDrag);
+  dial.addEventListener('pointercancel', stopDrag);
+  dial.addEventListener('lostpointercapture', stopDrag);
+  dial.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowUp') { e.preventDefault(); setSize(size + 1); }
+    else if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') { e.preventDefault(); setSize(size - 1); }
+    else if (e.key === 'Home') { e.preventDefault(); setSize(min); }
+    else if (e.key === 'End') { e.preventDefault(); setSize(max); }
+  });
+  reset.addEventListener('click', () => setSize(start));
+  setSize(start);
+})();
+</script>
+</body>
+</html>
