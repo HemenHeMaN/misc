@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="de" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interaktiver Schriftgrößen-Regler</title>
+    <!-- Tailwind CSS laden -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0f9ff',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            900: '#0369a1',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Benutzerdefinierte Slider-Track-Effekte */
+        .slider-track {
+            background: linear-gradient(90deg, #e2e8f0 0%, #cbd5e1 100%);
+        }
+        .dark .slider-track {
+            background: linear-gradient(90deg, #334155 0%, #1e293b 100%);
+        }
+    </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex items-center justify-center p-4 selection:bg-cyan-500 selection:text-white">
+
+    <div class="w-full max-w-2xl bg-slate-800/80 backdrop-blur-xl border border-slate-700/60 rounded-3xl p-8 shadow-2xl relative overflow-hidden">
+        <!-- Dekoratives Hintergrund-Element -->
+        <div class="absolute -top-24 -right-24 w-64 h-64 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none"></div>
+        <div class="absolute -bottom-24 -left-24 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+        <!-- Header -->
+        <div class="text-center mb-10">
+            <span class="inline-block py-1 px-3 rounded-full bg-cyan-500/10 text-cyan-400 text-xs font-semibold tracking-wider uppercase mb-3 border border-cyan-500/20">
+                Typografie & Haptik
+            </span>
+            <h1 class="text-2xl md:text-3xl font-bold tracking-tight text-white mb-2">
+                Präziser Stufen-Schieberegler
+            </h1>
+            <p class="text-slate-400 text-sm max-w-md mx-auto">
+                Spüren Sie den Widerstand: Der Regler rastet spürbar in 5 vordefinierte Schriftgrößen ein.
+            </p>
+        </div>
+
+        <!-- Vorschau-Bereich -->
+        <div class="bg-slate-900/90 border border-slate-700/80 rounded-2xl p-6 mb-10 min-h-[180px] flex flex-col justify-between shadow-inner transition-all duration-200">
+            <div class="flex items-center justify-between text-xs text-slate-400 border-b border-slate-800 pb-3 mb-4">
+                <span class="font-medium flex items-center gap-1.5">
+                    <span class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
+                    Live-Vorschau
+                </span>
+                <span id="badge-stufe" class="px-2.5 py-1 rounded-md bg-slate-800 text-cyan-300 font-mono text-xs border border-slate-700">
+                    Stufe 3 (L) • 20px
+                </span>
+            </div>
+            
+            <div class="flex items-center justify-center flex-grow py-2">
+                <p id="preview-text" class="text-center text-slate-100 font-medium transition-all duration-150 leading-relaxed select-none">
+                    Der schnelle braune Fuchs springt über den faulen Hund. 1234567890
+                </p>
+            </div>
+        </div>
+
+        <!-- Steuerung & Slider -->
+        <div class="space-y-8 px-2">
+            <!-- Native Range (Versteckt oder als Fallback, wir nutzen einen interaktiven Custom-Slider für echtes Snapping/Widerstandsgefühl) -->
+            <div class="relative pt-6 pb-2">
+                
+                <!-- Track Hintergrund -->
+                <div class="slider-track w-full h-3 rounded-full relative cursor-pointer" id="slider-track">
+                    <!-- Fortschritts-Balken -->
+                    <div id="slider-progress" class="absolute top-0 left-0 h-full bg-gradient-to-r from-cyan-500 to-indigo-500 rounded-full transition-all duration-75 pointer-events-none" style="width: 50%;"></div>
+                    
+                    <!-- Snap-Indikatoren auf dem Track -->
+                    <div class="absolute inset-0 flex justify-between px-3 items-center pointer-events-none">
+                        <div class="w-2 h-2 rounded-full bg-slate-400/50 dark:bg-slate-600"></div>
+                        <div class="w-2 h-2 rounded-full bg-slate-400/50 dark:bg-slate-600"></div>
+                        <div class="w-2 h-2 rounded-full bg-slate-400/50 dark:bg-slate-600"></div>
+                        <div class="w-2 h-2 rounded-full bg-slate-400/50 dark:bg-slate-600"></div>
+                        <div class="w-2 h-2 rounded-full bg-slate-400/50 dark:bg-slate-600"></div>
+                    </div>
+                </div>
+
+                <!-- Der eigentliche Regler-Knopf -->
+                <div id="slider-thumb" class="absolute top-1/2 -translate-y-1/2 -ml-4 w-8 h-8 bg-white border-2 border-cyan-500 rounded-full shadow-lg cursor-grab active:cursor-grabbing flex items-center justify-center transition-transform hover:scale-110 focus:outline-none focus:ring-4 focus:ring-cyan-500/30" style="left: 50%;">
+                    <div class="w-2 h-2 bg-cyan-600 rounded-full"></div>
+                </div>
+            </div>
+
+            <!-- Stufen-Skala (Labels) -->
+            <div class="grid grid-cols-5 text-center gap-1">
+                <button type="button" onclick="setStep(0)" class="step-btn group flex flex-col items-center focus:outline-none transition-all">
+                    <span class="text-xs font-bold text-slate-400 group-hover:text-cyan-400 transition-colors mb-1">S</span>
+                    <span class="text-[10px] text-slate-500 font-mono">14px</span>
+                </button>
+                <button type="button" onclick="setStep(1)" class="step-btn group flex flex-col items-center focus:outline-none transition-all">
+                    <span class="text-xs font-bold text-slate-400 group-hover:text-cyan-400 transition-colors mb-1">M</span>
+                    <span class="text-[10px] text-slate-500 font-mono">17px</span>
+                </button>
+                <button type="button" onclick="setStep(2)" class="step-btn group flex flex-col items-center focus:outline-none transition-all">
+                    <span class="text-xs font-bold text-slate-400 group-hover:text-cyan-400 transition-colors mb-1">L</span>
+                    <span class="text-[10px] text-slate-500 font-mono">20px</span>
+                </button>
+                <button type="button" onclick="setStep(3)" class="step-btn group flex flex-col items-center focus:outline-none transition-all">
+                    <span class="text-xs font-bold text-slate-400 group-hover:text-cyan-400 transition-colors mb-1">XL</span>
+                    <span class="text-[10px] text-slate-500 font-mono">23px</span>
+                </button>
+                <button type="button" onclick="setStep(4)" class="step-btn group flex flex-col items-center focus:outline-none transition-all">
+                    <span class="text-xs font-bold text-slate-400 group-hover:text-cyan-400 transition-colors mb-1">XXL</span>
+                    <span class="text-[10px] text-slate-500 font-mono">26px</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Footer / Info -->
+        <div class="mt-10 pt-4 border-t border-slate-700/60 text-center text-xs text-slate-500 flex items-center justify-center gap-2">
+            <span>Tipp: Nutzen Sie auch die Pfeiltasten (Links/Rechts) bei Fokus auf den Regler.</span>
+        </div>
+    </div>
+
+    <!-- JavaScript für die Einrast-Logik und den Widerstands-Effekt -->
+    <script>
+        // Konfiguration der Stufen
+        const steps = [
+            { label: 'S', size: 14, name: 'Stufe 1 (S)' },
+            { label: 'M', size: 17, name: 'Stufe 2 (M)' },
+            { label: 'L', size: 20, name: 'Stufe 3 (L)' },
+            { label: 'XL', size: 23, name: 'Stufe 4 (XL)' },
+            { label: 'XXL', size: 26, name: 'Stufe 5 (XXL)' }
+        ];
+
+        let currentStepIndex = 2; // Start bei L (20px)
+        let isDragging = false;
+
+        const track = document.getElementById('slider-track');
+        const thumb = document.getElementById('slider-thumb');
+        const progress = document.getElementById('slider-progress');
+        const previewText = document.getElementById('preview-text');
+        const badgeStufe = document.getElementById('badge-stufe');
+        const stepButtons = document.querySelectorAll('.step-btn');
+
+        // Funktion zum Aktualisieren der UI basierend auf dem Index
+        function updateUI(index, animate = true) {
+            currentStepIndex = Math.max(0, Math.min(index, steps.length - 1));
+            const current = steps[currentStepIndex];
+
+            // Position des Thumbs in Prozent (0%, 25%, 50%, 75%, 100%)
+            const percent = (currentStepIndex / (steps.length - 1)) * 100;
+
+            if (animate) {
+                thumb.style.transition = 'left 0.15s cubic-bezier(0.34, 1.56, 0.64, 1)';
+                progress.style.transition = 'width 0.15s cubic-bezier(0.34, 1.56, 0.64, 1)';
+            } else {
+                thumb.style.transition = 'none';
+                progress.style.transition = 'none';
+            }
+
+            thumb.style.left = `${percent}%`;
+            progress.style.width = `${percent}%`;
+
+            // Schriftgröße anpassen
+            previewText.style.fontSize = `${current.size}px`;
+
+            // Badge Text aktualisieren
+            badgeStufe.textContent = `${current.name} • ${current.size}px`;
+
+            // Skala-Buttons hervorheben
+            stepButtons.forEach((btn, idx) => {
+                const labelSpan = btn.querySelector('span:first-child');
+                const subSpan = btn.querySelector('span:last-child');
+                if (idx === currentStepIndex) {
+                    labelSpan.className = 'text-xs font-bold text-cyan-400 transition-colors mb-1 scale-110';
+                    subSpan.className = 'text-[10px] text-cyan-300/80 font-mono font-medium';
+                } else {
+                    labelSpan.className = 'text-xs font-bold text-slate-400 group-hover:text-cyan-400 transition-colors mb-1';
+                    subSpan.className = 'text-[10px] text-slate-500 font-mono';
+                }
+            });
+        }
+
+        // Klick auf spezifische Stufe über die Skala
+        function setStep(index) {
+            updateUI(index, true);
+            // Kleiner haptischer Widerstands-Effekt (Vibration falls unterstützt)
+            if (navigator.vibrate) {
+                navigator.vibrate(15);
+            }
+        }
+
+        // Maus- und Touch-Drag Logik mit Widerstands- / Snapping-Simulation
+        function getStepFromClientX(clientX) {
+            const rect = track.getBoundingClientRect();
+            const x = clientX - rect.left;
+            const width = rect.width;
+            let rawPercent = Math.max(0, Math.min(1, x / width));
+            
+            // Auf die 5 Stufen mappen (0, 0.25, 0.5, 0.75, 1.0)
+            const exactStepFloat = rawPercent * (steps.length - 1);
+            
+            // Physikalischer Widerstand: Der Regler zieht leicht zur nächstgelegenen Stufe, 
+            // es sei denn, man zieht ihn mit Nachdruck weiter (Magneteffekt)
+            const closestIndex = Math.round(exactStepFloat);
+            const distanceToClosest = Math.abs(exactStepFloat - closestIndex);
+
+            // Wenn man nah genug an einer Stufe ist, "rastet" er spürbar ein (Magnet-Schwelle von 0.35)
+            if (distanceToClosest < 0.35) {
+                return closestIndex;
+            }
+
+            return Math.round(exactStepFloat);
+        }
+
+        function onPointerDown(e) {
+            isDragging = true;
+            updateFromEvent(e);
+            window.addEventListener('pointermove', onPointerMove);
+            window.addEventListener('pointerup', onPointerUp);
+        }
+
+        function onPointerMove(e) {
+            if (!isDragging) return;
+            const newIndex = getStepFromClientX(e.clientX);
+            if (newIndex !== currentStepIndex) {
+                if (navigator.vibrate) {
+                    navigator.vibrate(20); // Haptisches Feedback beim Einrasten
+                }
+            }
+            updateUI(newIndex, false);
+        }
+
+        function onPointerUp(e) {
+            if (!isDragging) return;
+            isDragging = false;
+            // Beim Loslassen exakt auf den aktuellen Rasterpunkt einrasten
+            updateUI(currentStepIndex, true);
+            window.removeEventListener('pointermove', onPointerMove);
+            window.removeEventListener('pointerup', onPointerUp);
+        }
+
+        track.addEventListener('pointerdown', (e) => {
+            const newIndex = getStepFromClientX(e.clientX);
+            updateUI(newIndex, true);
+            if (navigator.vibrate) navigator.vibrate(20);
+        });
+
+        thumb.addEventListener('pointerdown', onPointerDown);
+
+        // Tastatursteuerung für Barrierefreiheit (Pfeiltasten)
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === 'ArrowUp') {
+                if (currentStepIndex < steps.length - 1) {
+                    setStep(currentStepIndex + 1);
+                }
+            } else if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') {
+                if (currentStepIndex > 0) {
+                    setStep(currentStepIndex - 1);
+                }
+            }
+        });
+
+        // Initialisierung beim Laden
+        window.onload = function() {
+            updateUI(currentStepIndex, false);
+        };
+    </script>
+</body>
+</html>
