@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Interaktiver Schriftgrößen-Regler</title>
+    <title>Interaktiver Schriftgrößen-Regler mit Touch & Snapping</title>
     <!-- Tailwind CSS laden -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -27,8 +27,8 @@
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
         body {
             font-family: 'Inter', sans-serif;
+            touch-action: pan-y; /* Erlaubt vertikales Scrollen, blockiert unerwünschtes horizontales Scrollen beim Ziehen */
         }
-        /* Benutzerdefinierte Slider-Track-Effekte */
         .slider-track {
             background: linear-gradient(90deg, #e2e8f0 0%, #cbd5e1 100%);
         }
@@ -39,26 +39,26 @@
 </head>
 <body class="bg-slate-900 text-slate-100 min-h-screen flex items-center justify-center p-4 selection:bg-cyan-500 selection:text-white">
 
-    <div class="w-full max-w-2xl bg-slate-800/80 backdrop-blur-xl border border-slate-700/60 rounded-3xl p-8 shadow-2xl relative overflow-hidden">
+    <div class="w-full max-w-2xl bg-slate-800/80 backdrop-blur-xl border border-slate-700/60 rounded-3xl p-6 md:p-8 shadow-2xl relative overflow-hidden">
         <!-- Dekoratives Hintergrund-Element -->
         <div class="absolute -top-24 -right-24 w-64 h-64 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none"></div>
         <div class="absolute -bottom-24 -left-24 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none"></div>
 
         <!-- Header -->
-        <div class="text-center mb-10">
+        <div class="text-center mb-8 md:mb-10">
             <span class="inline-block py-1 px-3 rounded-full bg-cyan-500/10 text-cyan-400 text-xs font-semibold tracking-wider uppercase mb-3 border border-cyan-500/20">
-                Typografie & Haptik
+                Touch & Desktop Haptik
             </span>
             <h1 class="text-2xl md:text-3xl font-bold tracking-tight text-white mb-2">
                 Präziser Stufen-Schieberegler
             </h1>
             <p class="text-slate-400 text-sm max-w-md mx-auto">
-                Spüren Sie den Widerstand: Der Regler rastet spürbar in 5 vordefinierte Schriftgrößen ein.
+                Ziehen Sie den Regler bequem mit dem Finger oder der Maus. Er rastet magnetisch in die 5 Stufen ein.
             </p>
         </div>
 
         <!-- Vorschau-Bereich -->
-        <div class="bg-slate-900/90 border border-slate-700/80 rounded-2xl p-6 mb-10 min-h-[180px] flex flex-col justify-between shadow-inner transition-all duration-200">
+        <div class="bg-slate-900/90 border border-slate-700/80 rounded-2xl p-6 mb-8 md:mb-10 min-h-[160px] md:min-h-[180px] flex flex-col justify-between shadow-inner transition-all duration-200">
             <div class="flex items-center justify-between text-xs text-slate-400 border-b border-slate-800 pb-3 mb-4">
                 <span class="font-medium flex items-center gap-1.5">
                     <span class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
@@ -78,64 +78,62 @@
 
         <!-- Steuerung & Slider -->
         <div class="space-y-8 px-2">
-            <!-- Native Range (Versteckt oder als Fallback, wir nutzen einen interaktiven Custom-Slider für echtes Snapping/Widerstandsgefühl) -->
-            <div class="relative pt-6 pb-2">
+            <div class="relative pt-8 pb-4"> <!-- Extra Padding für komfortablere Touch-Trefferfläche -->
                 
                 <!-- Track Hintergrund -->
-                <div class="slider-track w-full h-3 rounded-full relative cursor-pointer" id="slider-track">
+                <div class="slider-track w-full h-4 rounded-full relative cursor-pointer" id="slider-track">
                     <!-- Fortschritts-Balken -->
                     <div id="slider-progress" class="absolute top-0 left-0 h-full bg-gradient-to-r from-cyan-500 to-indigo-500 rounded-full transition-all duration-75 pointer-events-none" style="width: 50%;"></div>
                     
                     <!-- Snap-Indikatoren auf dem Track -->
-                    <div class="absolute inset-0 flex justify-between px-3 items-center pointer-events-none">
-                        <div class="w-2 h-2 rounded-full bg-slate-400/50 dark:bg-slate-600"></div>
-                        <div class="w-2 h-2 rounded-full bg-slate-400/50 dark:bg-slate-600"></div>
-                        <div class="w-2 h-2 rounded-full bg-slate-400/50 dark:bg-slate-600"></div>
-                        <div class="w-2 h-2 rounded-full bg-slate-400/50 dark:bg-slate-600"></div>
-                        <div class="w-2 h-2 rounded-full bg-slate-400/50 dark:bg-slate-600"></div>
+                    <div class="absolute inset-0 flex justify-between px-3.5 items-center pointer-events-none">
+                        <div class="w-2 h-2 rounded-full bg-slate-400/60 dark:bg-slate-600"></div>
+                        <div class="w-2 h-2 rounded-full bg-slate-400/60 dark:bg-slate-600"></div>
+                        <div class="w-2 h-2 rounded-full bg-slate-400/60 dark:bg-slate-600"></div>
+                        <div class="w-2 h-2 rounded-full bg-slate-400/60 dark:bg-slate-600"></div>
+                        <div class="w-2 h-2 rounded-full bg-slate-400/60 dark:bg-slate-600"></div>
                     </div>
                 </div>
 
-                <!-- Der eigentliche Regler-Knopf -->
-                <div id="slider-thumb" class="absolute top-1/2 -translate-y-1/2 -ml-4 w-8 h-8 bg-white border-2 border-cyan-500 rounded-full shadow-lg cursor-grab active:cursor-grabbing flex items-center justify-center transition-transform hover:scale-110 focus:outline-none focus:ring-4 focus:ring-cyan-500/30" style="left: 50%;">
-                    <div class="w-2 h-2 bg-cyan-600 rounded-full"></div>
+                <!-- Der eigentliche Regler-Knopf (mit vergrößertem Touch-Bereich) -->
+                <div id="slider-thumb" class="absolute top-1/2 -translate-y-1/2 -ml-5 w-10 h-10 md:w-8 md:h-8 bg-white border-2 border-cyan-500 rounded-full shadow-xl cursor-grab active:cursor-grabbing flex items-center justify-center transition-transform hover:scale-110 focus:outline-none focus:ring-4 focus:ring-cyan-500/30 touch-none" style="left: 50%;">
+                    <div class="w-2.5 h-2.5 md:w-2 md:h-2 bg-cyan-600 rounded-full"></div>
                 </div>
             </div>
 
-            <!-- Stufen-Skala (Labels) -->
+            <!-- Stufen-Skala (Labels) mit großzügigen Touch-Targets -->
             <div class="grid grid-cols-5 text-center gap-1">
-                <button type="button" onclick="setStep(0)" class="step-btn group flex flex-col items-center focus:outline-none transition-all">
+                <button type="button" onclick="setStep(0)" class="step-btn group py-2 flex flex-col items-center focus:outline-none transition-all rounded-xl hover:bg-slate-700/30">
                     <span class="text-xs font-bold text-slate-400 group-hover:text-cyan-400 transition-colors mb-1">S</span>
-                    <span class="text-[10px] text-slate-500 font-mono">14px</span>
+                    <span class="text-[11px] text-slate-500 font-mono">14px</span>
                 </button>
-                <button type="button" onclick="setStep(1)" class="step-btn group flex flex-col items-center focus:outline-none transition-all">
+                <button type="button" onclick="setStep(1)" class="step-btn group py-2 flex flex-col items-center focus:outline-none transition-all rounded-xl hover:bg-slate-700/30">
                     <span class="text-xs font-bold text-slate-400 group-hover:text-cyan-400 transition-colors mb-1">M</span>
-                    <span class="text-[10px] text-slate-500 font-mono">17px</span>
+                    <span class="text-[11px] text-slate-500 font-mono">17px</span>
                 </button>
-                <button type="button" onclick="setStep(2)" class="step-btn group flex flex-col items-center focus:outline-none transition-all">
+                <button type="button" onclick="setStep(2)" class="step-btn group py-2 flex flex-col items-center focus:outline-none transition-all rounded-xl hover:bg-slate-700/30">
                     <span class="text-xs font-bold text-slate-400 group-hover:text-cyan-400 transition-colors mb-1">L</span>
-                    <span class="text-[10px] text-slate-500 font-mono">20px</span>
+                    <span class="text-[11px] text-slate-500 font-mono">20px</span>
                 </button>
-                <button type="button" onclick="setStep(3)" class="step-btn group flex flex-col items-center focus:outline-none transition-all">
+                <button type="button" onclick="setStep(3)" class="step-btn group py-2 flex flex-col items-center focus:outline-none transition-all rounded-xl hover:bg-slate-700/30">
                     <span class="text-xs font-bold text-slate-400 group-hover:text-cyan-400 transition-colors mb-1">XL</span>
-                    <span class="text-[10px] text-slate-500 font-mono">23px</span>
+                    <span class="text-[11px] text-slate-500 font-mono">23px</span>
                 </button>
-                <button type="button" onclick="setStep(4)" class="step-btn group flex flex-col items-center focus:outline-none transition-all">
+                <button type="button" onclick="setStep(4)" class="step-btn group py-2 flex flex-col items-center focus:outline-none transition-all rounded-xl hover:bg-slate-700/30">
                     <span class="text-xs font-bold text-slate-400 group-hover:text-cyan-400 transition-colors mb-1">XXL</span>
-                    <span class="text-[10px] text-slate-500 font-mono">26px</span>
+                    <span class="text-[11px] text-slate-500 font-mono">26px</span>
                 </button>
             </div>
         </div>
 
         <!-- Footer / Info -->
-        <div class="mt-10 pt-4 border-t border-slate-700/60 text-center text-xs text-slate-500 flex items-center justify-center gap-2">
-            <span>Tipp: Nutzen Sie auch die Pfeiltasten (Links/Rechts) bei Fokus auf den Regler.</span>
+        <div class="mt-8 pt-4 border-t border-slate-700/65 text-center text-xs text-slate-400 flex items-center justify-center gap-2">
+            <span>💡 Tipp: Direkt auf den Regler tippen, mit dem Finger ziehen oder die Skalen-Punkte anklicken.</span>
         </div>
     </div>
 
-    <!-- JavaScript für die Einrast-Logik und den Widerstands-Effekt -->
+    <!-- JavaScript für erweiterte Touch-, Maus- und Snapping-Logik -->
     <script>
-        // Konfiguration der Stufen
         const steps = [
             { label: 'S', size: 14, name: 'Stufe 1 (S)' },
             { label: 'M', size: 17, name: 'Stufe 2 (M)' },
@@ -154,17 +152,16 @@
         const badgeStufe = document.getElementById('badge-stufe');
         const stepButtons = document.querySelectorAll('.step-btn');
 
-        // Funktion zum Aktualisieren der UI basierend auf dem Index
+        // UI-Aktualisierung
         function updateUI(index, animate = true) {
             currentStepIndex = Math.max(0, Math.min(index, steps.length - 1));
             const current = steps[currentStepIndex];
 
-            // Position des Thumbs in Prozent (0%, 25%, 50%, 75%, 100%)
             const percent = (currentStepIndex / (steps.length - 1)) * 100;
 
             if (animate) {
-                thumb.style.transition = 'left 0.15s cubic-bezier(0.34, 1.56, 0.64, 1)';
-                progress.style.transition = 'width 0.15s cubic-bezier(0.34, 1.56, 0.64, 1)';
+                thumb.style.transition = 'left 0.18s cubic-bezier(0.34, 1.56, 0.64, 1)';
+                progress.style.transition = 'width 0.18s cubic-bezier(0.34, 1.56, 0.64, 1)';
             } else {
                 thumb.style.transition = 'none';
                 progress.style.transition = 'none';
@@ -173,107 +170,133 @@
             thumb.style.left = `${percent}%`;
             progress.style.width = `${percent}%`;
 
-            // Schriftgröße anpassen
             previewText.style.fontSize = `${current.size}px`;
-
-            // Badge Text aktualisieren
             badgeStufe.textContent = `${current.name} • ${current.size}px`;
 
-            // Skala-Buttons hervorheben
             stepButtons.forEach((btn, idx) => {
                 const labelSpan = btn.querySelector('span:first-child');
                 const subSpan = btn.querySelector('span:last-child');
                 if (idx === currentStepIndex) {
                     labelSpan.className = 'text-xs font-bold text-cyan-400 transition-colors mb-1 scale-110';
-                    subSpan.className = 'text-[10px] text-cyan-300/80 font-mono font-medium';
+                    subSpan.className = 'text-[11px] text-cyan-300 font-mono font-medium';
                 } else {
                     labelSpan.className = 'text-xs font-bold text-slate-400 group-hover:text-cyan-400 transition-colors mb-1';
-                    subSpan.className = 'text-[10px] text-slate-500 font-mono';
+                    subSpan.className = 'text-[11px] text-slate-500 font-mono';
                 }
             });
         }
 
-        // Klick auf spezifische Stufe über die Skala
         function setStep(index) {
             updateUI(index, true);
-            // Kleiner haptischer Widerstands-Effekt (Vibration falls unterstützt)
-            if (navigator.vibrate) {
-                navigator.vibrate(15);
+            if (window.navigator && window.navigator.vibrate) {
+                window.navigator.vibrate(25);
             }
         }
 
-        // Maus- und Touch-Drag Logik mit Widerstands- / Snapping-Simulation
+        // Berechnung der Position mit haptischem Magnet-/Widerstands-Effekt
         function getStepFromClientX(clientX) {
             const rect = track.getBoundingClientRect();
             const x = clientX - rect.left;
             const width = rect.width;
             let rawPercent = Math.max(0, Math.min(1, x / width));
             
-            // Auf die 5 Stufen mappen (0, 0.25, 0.5, 0.75, 1.0)
             const exactStepFloat = rawPercent * (steps.length - 1);
-            
-            // Physikalischer Widerstand: Der Regler zieht leicht zur nächstgelegenen Stufe, 
-            // es sei denn, man zieht ihn mit Nachdruck weiter (Magneteffekt)
             const closestIndex = Math.round(exactStepFloat);
             const distanceToClosest = Math.abs(exactStepFloat - closestIndex);
 
-            // Wenn man nah genug an einer Stufe ist, "rastet" er spürbar ein (Magnet-Schwelle von 0.35)
-            if (distanceToClosest < 0.35) {
+            // Magnet-Widerstands-Schwelle (0.32): Zieht den Regler spürbar zur Stufe
+            if (distanceToClosest < 0.32) {
                 return closestIndex;
             }
 
             return Math.round(exactStepFloat);
         }
 
-        function onPointerDown(e) {
+        // Universelle Pointer/Touch/Mouse Handler
+        function handleStart(clientX) {
             isDragging = true;
-            updateFromEvent(e);
-            window.addEventListener('pointermove', onPointerMove);
-            window.addEventListener('pointerup', onPointerUp);
+            const newIndex = getStepFromClientX(clientX);
+            if (newIndex !== currentStepIndex) {
+                if (window.navigator && window.navigator.vibrate) window.navigator.vibrate(20);
+            }
+            updateUI(newIndex, true);
         }
 
-        function onPointerMove(e) {
+        function handleMove(clientX) {
             if (!isDragging) return;
-            const newIndex = getStepFromClientX(e.clientX);
+            const newIndex = getStepFromClientX(clientX);
             if (newIndex !== currentStepIndex) {
-                if (navigator.vibrate) {
-                    navigator.vibrate(20); // Haptisches Feedback beim Einrasten
-                }
+                if (window.navigator && window.navigator.vibrate) window.navigator.vibrate(20);
             }
             updateUI(newIndex, false);
         }
 
-        function onPointerUp(e) {
+        function handleEnd() {
             if (!isDragging) return;
             isDragging = false;
-            // Beim Loslassen exakt auf den aktuellen Rasterpunkt einrasten
             updateUI(currentStepIndex, true);
-            window.removeEventListener('pointermove', onPointerMove);
-            window.removeEventListener('pointerup', onPointerUp);
         }
 
-        track.addEventListener('pointerdown', (e) => {
-            const newIndex = getStepFromClientX(e.clientX);
-            updateUI(newIndex, true);
-            if (navigator.vibrate) navigator.vibrate(20);
+        // Maus-Events
+        thumb.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            isDragging = true;
         });
 
-        thumb.addEventListener('pointerdown', onPointerDown);
+        track.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            handleStart(e.clientX);
+            isDragging = true;
+        });
 
-        // Tastatursteuerung für Barrierefreiheit (Pfeiltasten)
-        window.addEventListener('keydown', (e) => {
-            if (e.key === 'ArrowRight' || e.key === 'ArrowUp') {
-                if (currentStepIndex < steps.length - 1) {
-                    setStep(currentStepIndex + 1);
-                }
-            } else if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') {
-                if (currentStepIndex > 0) {
-                    setStep(currentStepIndex - 1);
-                }
+        window.addEventListener('mousemove', (e) => {
+            if (isDragging) {
+                handleMove(e.clientX);
             }
         });
 
-        // Initialisierung beim Laden
+        window.addEventListener('mouseup', () => {
+            if (isDragging) {
+                handleEnd();
+            }
+        });
+
+        // Touch-Events für Smartphones und Tablets
+        thumb.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            isDragging = true;
+        }, { passive: false });
+
+        track.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            if (e.touches.length > 0) {
+                handleStart(e.touches[0].clientX);
+                isDragging = true;
+            }
+        }, { passive: false });
+
+        window.addEventListener('touchmove', (e) => {
+            if (isDragging && e.touches.length > 0) {
+                handleMove(e.touches[0].clientX);
+            }
+        }, { passive: true });
+
+        window.addEventListener('touchend', () => {
+            if (isDragging) {
+                handleEnd();
+            }
+        });
+
+        // Tastatursteuerung für Desktop
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === 'ArrowUp') {
+                if (currentStepIndex < steps.length - 1) setStep(currentStepIndex + 1);
+            } else if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') {
+                if (currentStepIndex > 0) setStep(currentStepIndex - 1);
+            }
+        });
+
+        // Initialisierung
         window.onload = function() {
             updateUI(currentStepIndex, false);
         };
