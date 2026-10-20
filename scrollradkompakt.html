@@ -642,6 +642,31 @@ h1 { color: var(--heading-color); font-size: 1.4rem; margin: 0; }
 
 <!-- Verstecktes Menü (3 Striche) - Kompakt -->
 <div class="menu-box" id="menuBox">
+    <div>
+        <span class="menu-label">Schriftgröße</span>
+        <div class="size-row">
+            <span class="small-a">A</span>
+            <div class="size-ctl">
+                <div class="step-slider" id="stepSlider" role="slider" tabindex="0" aria-label="Schriftgröße" aria-valuemin="0" aria-valuemax="4" aria-valuenow="1">
+                    <div class="step-track">
+                        <div class="step-fill" id="stepFill"></div>
+                        <i class="step-dot" style="left:0%"></i><i class="step-dot" style="left:25%"></i><i class="step-dot" style="left:50%"></i><i class="step-dot" style="left:75%"></i><i class="step-dot" style="left:100%"></i>
+                    </div>
+                    <div class="step-thumb" id="stepThumb"></div>
+                </div>
+                <div class="step-labels">
+                    <button type="button" class="step-label" style="left:0%">S</button>
+                    <button type="button" class="step-label" style="left:25%">M</button>
+                    <button type="button" class="step-label" style="left:50%">L</button>
+                    <button type="button" class="step-label" style="left:75%">XL</button>
+                    <button type="button" class="step-label" style="left:100%">XXL</button>
+                </div>
+            </div>
+            <span class="big-a">A</span>
+            <span class="size-value" id="sizeValue">17px</span>
+        </div>
+    </div>
+
     <div class="menu-grid-row">
         <!-- Linke Spalte: Stunden-Scrollrad -->
         <div class="menu-col">
@@ -671,30 +696,6 @@ h1 { color: var(--heading-color); font-size: 1.4rem; margin: 0; }
                     <button type="button" class="seg-btn" id="segName">Name</button>
                 </div>
             </div>
-        </div>
-    </div>
-    <div>
-        <span class="menu-label">Schriftgröße</span>
-        <div class="size-row">
-            <span class="small-a">A</span>
-            <div class="size-ctl">
-                <div class="step-slider" id="stepSlider" role="slider" tabindex="0" aria-label="Schriftgröße" aria-valuemin="0" aria-valuemax="4" aria-valuenow="1">
-                    <div class="step-track">
-                        <div class="step-fill" id="stepFill"></div>
-                        <i class="step-dot" style="left:0%"></i><i class="step-dot" style="left:25%"></i><i class="step-dot" style="left:50%"></i><i class="step-dot" style="left:75%"></i><i class="step-dot" style="left:100%"></i>
-                    </div>
-                    <div class="step-thumb" id="stepThumb"></div>
-                </div>
-                <div class="step-labels">
-                    <button type="button" class="step-label" style="left:0%">S</button>
-                    <button type="button" class="step-label" style="left:25%">M</button>
-                    <button type="button" class="step-label" style="left:50%">L</button>
-                    <button type="button" class="step-label" style="left:75%">XL</button>
-                    <button type="button" class="step-label" style="left:100%">XXL</button>
-                </div>
-            </div>
-            <span class="big-a">A</span>
-            <span class="size-value" id="sizeValue">17px</span>
         </div>
     </div>
     <div>
