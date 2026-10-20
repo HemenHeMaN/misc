@@ -163,6 +163,17 @@ h1 { color: var(--heading-color); font-size: 1.4rem; margin: 0; }
 }
 .menu-box.active { display: flex; }
 .menu-label { display: block; font-size: 0.8rem; font-weight: bold; color: var(--update-color); margin-bottom: 6px; text-transform: uppercase; letter-spacing: .04em; }
+
+/* Farbpaletten-Auswahl im Menü */
+.color-picker-row { display: flex; gap: 10px; }
+.color-picker-group { flex: 1; display: flex; align-items: center; justify-content: space-between; background: var(--filter-bg); padding: 6px 10px; border-radius: 6px; }
+.color-picker-group label { font-size: 0.85rem; font-weight: bold; color: var(--text-color); cursor: pointer; }
+.color-picker-group input[type="color"] {
+    -webkit-appearance: none; border: none; width: 32px; height: 26px; border-radius: 4px; cursor: pointer; background: transparent;
+}
+.color-picker-group input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
+.color-picker-group input[type="color"]::-webkit-color-swatch { border: 1px solid var(--border-color); border-radius: 4px; }
+
 .size-row { display: flex; align-items: flex-start; gap: 10px; }
 .size-row .small-a, .size-row .big-a, .size-row .size-value { line-height: 34px; }
 .size-row .small-a { font-size: 0.8rem; font-weight: bold; }
@@ -341,7 +352,7 @@ h1 { color: var(--heading-color); font-size: 1.4rem; margin: 0; }
     font-variant-numeric: tabular-nums;
 }
 
-/* Flugkarten (Design 1) */
+/* Flugkarten (Design 1) - Nutzen CSS-Variablen für dynamische Farben */
 .flight-card {
     border-radius: 8px; padding: 12px; margin-bottom: 10px;
     box-shadow: 0 1px 3px rgba(0,0,0,0.15); border-left: 6px solid #ccc; background: var(--card-bg);
@@ -611,9 +622,8 @@ h1 { color: var(--heading-color); font-size: 1.4rem; margin: 0; }
     </div>
 </div>
 
-<!-- Verstecktes Menü (3 Striche) mit vertikalem Stunden-Scrollrad -->
+<!-- Verstecktes Menü (3 Striche) mit Farbpalette & Stunden-Scrollrad -->
 <div class="menu-box" id="menuBox">
-
     <div>
         <span class="menu-label">Schriftgröße</span>
         <div class="size-row">
@@ -658,24 +668,37 @@ h1 { color: var(--heading-color); font-size: 1.4rem; margin: 0; }
             <button type="button" class="seg-btn" id="segLandedOff">Ausblenden</button>
         </div>
     </div>
+    
     <div>
         <span class="menu-label">Stunden-Filter (Zukünftige Flüge)</span>
         <div class="hour-wheel-menu-container">
             <div class="hour-wheel-center-highlight"></div>
             <div class="hour-wheel-vert" id="hourWheelVert">
                 <div class="hour-wheel-spacer-v"></div>
-                <div class="hour-item-v active" data-hours="0">Alle.</div>
-                <div class="hour-item-v" data-hours="1">1 Stunde</div>
-                <div class="hour-item-v" data-hours="2">2 Stunden</div>
-                <div class="hour-item-v" data-hours="3">3 Stunden</div>
-                <div class="hour-item-v" data-hours="4">4 Stunden</div>
-                <div class="hour-item-v" data-hours="5">5 Stunden</div>
-                <div class="hour-item-v" data-hours="6">6 Stunden</div>
+                <div class="hour-item-v active" data-hours="0">Alle Std.</div>
+                <div class="hour-item-v" data-hours="1">1 Std.</div>
+                <div class="hour-item-v" data-hours="2">2 Std.</div>
+                <div class="hour-item-v" data-hours="3">3 Std.</div>
+                <div class="hour-item-v" data-hours="4">4 Std.</div>
+                <div class="hour-item-v" data-hours="5">5 Std.</div>
+                <div class="hour-item-v" data-hours="6">6 Std.</div>
                 <div class="hour-wheel-spacer-v"></div>
             </div>
         </div>
     </div>
-    
+    <div>
+        <span class="menu-label">Farbauswahl (Linie & Charter)</span>
+        <div class="color-picker-row">
+            <div class="color-picker-group">
+                <label for="colorLinie">Linie</label>
+                <input type="color" id="colorLinie" value="#eaf3ff">
+            </div>
+            <div class="color-picker-group">
+                <label for="colorCharter">Charter</label>
+                <input type="color" id="colorCharter" value="#fff3e6">
+            </div>
+        </div>
+    </div>
     <div>
         <span class="menu-label">App</span>
         <a class="seg-btn apk-link" href="dus.release.apk" download="dus.release.apk">Android-App herunterladen (APK)</a>
@@ -749,6 +772,9 @@ const THEME_KEY = 'dus_theme';
 const VIEW_KEY = 'dus_active_view';
 const FLAG_KEY = 'dus_flag_mode';
 const FILTER_KEY = 'dus_active_filter';
+const COLOR_LINIE_KEY = 'dus_color_linie';
+const COLOR_CHARTER_KEY = 'dus_color_charter';
+
 const TF_FENSTER = 90;
 const EMPTY_MARK = '------';
 const LANDED_STEPS = [5, 10, 15];
@@ -762,6 +788,49 @@ let currentFilter = 'all';
 let currentSearch = '';
 let showFlag = true;
 let selectedHours = 0; // 0 = Alle, 1-6 = Filter nach Stunden
+
+/* --- FARBPALETTEN LOGIK --- */
+const colorLinieInput = document.getElementById('colorLinie');
+const colorCharterInput = document.getElementById('colorCharter');
+
+function applyCustomColors() {
+    const lColor = colorLinieInput.value;
+    const cColor = colorCharterInput.value;
+    
+    document.documentElement.style.setProperty('--card-linie-bg', lColor);
+    document.documentElement.style.setProperty('--card-charter-bg', cColor);
+}
+
+colorLinieInput.addEventListener('input', () => {
+    applyCustomColors();
+    try { localStorage.setItem(COLOR_LINIE_KEY, colorLinieInput.value); } catch(e){}
+});
+
+colorCharterInput.addEventListener('input', () => {
+    applyCustomColors();
+    try { localStorage.setItem(COLOR_CHARTER_KEY, colorCharterInput.value); } catch(e){}
+});
+
+function loadCustomColors() {
+    try {
+        const savedLinie = localStorage.getItem(COLOR_LINIE_KEY);
+        const savedCharter = localStorage.getItem(COLOR_CHARTER_KEY);
+        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+
+        if (savedLinie) {
+            colorLinieInput.value = savedLinie;
+        } else if (isDark) {
+            colorLinieInput.value = '#16243b';
+        }
+
+        if (savedCharter) {
+            colorCharterInput.value = savedCharter;
+        } else if (isDark) {
+            colorCharterInput.value = '#3b2316';
+        }
+    } catch(e){}
+    applyCustomColors();
+}
 
 function getFlagCode(country) {
     if (!country) return 'de';
@@ -858,6 +927,7 @@ function applyTheme() {
     } else {
         root.removeAttribute('data-theme');
     }
+    loadCustomColors();
 }
 
 function loadTheme() {
@@ -879,6 +949,7 @@ themeCb.addEventListener('change', function (e) {
 });
 
 loadTheme();
+loadCustomColors();
 
 const menuToggle = document.getElementById('menuToggle');
 const menuBox = document.getElementById('menuBox');
