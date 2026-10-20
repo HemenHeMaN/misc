@@ -1,0 +1,445 @@
+
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <title>Stundenauswahl Drehrad</title>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            overflow: hidden;
+        }
+
+        body {
+            font-family: Inter, -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #050505;
+            color: #fff;
+            touch-action: none;
+        }
+
+        .container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .picker-stage {
+            position: relative;
+            width: 100%;
+            height: 400px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            perspective: 1200px;
+            perspective-origin: 50% 50%;
+            cursor: grab;
+            touch-action: none;
+        }
+
+        .picker-stage.dragging {
+            cursor: grabbing;
+        }
+
+        .picker-wheel {
+            position: absolute;
+            width: 256px;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transform-style: preserve-3d;
+            will-change: transform;
+        }
+
+        .picker-item {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: 500;
+            letter-spacing: 0.02em;
+            color: #9ca3af;
+            white-space: nowrap;
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+            pointer-events: none;
+        }
+
+        /* Fokusrahmen */
+        .focus-ring {
+            position: absolute;
+            z-index: 10;
+            width: 256px;
+            height: 80px;
+            border-top: 1px solid rgba(255, 255, 255, 0.16);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.16);
+            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.025);
+            box-shadow:
+                0 0 30px rgba(0, 0, 0, 0.65),
+                inset 0 0 15px rgba(255, 255, 255, 0.015);
+            backdrop-filter: blur(2px);
+            pointer-events: none;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 16px;
+        }
+
+        .focus-dot {
+            width: 8px;
+            height: 8px;
+            flex-shrink: 0;
+            border-radius: 50%;
+            background: #3b82f6;
+            box-shadow: 0 0 8px #3b82f6;
+        }
+
+        /*
+           Scharfer Text:
+           Dieses Element befindet sich außerhalb des 3D-Zylinders.
+           Es wird weder perspektivisch verzerrt noch hochskaliert.
+        */
+        .selected-label {
+            position: absolute;
+            z-index: 20;
+            width: 256px;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: Inter, Arial, sans-serif;
+            font-size: 24px;
+            font-weight: 500;
+            letter-spacing: 0.02em;
+            color: #fff;
+            white-space: nowrap;
+            pointer-events: none;
+            text-shadow: none;
+            filter: none;
+            transform: none;
+            font-synthesis: none;
+        }
+
+        @media (min-width: 640px) {
+            .picker-wheel,
+            .focus-ring,
+            .selected-label {
+                width: 320px;
+            }
+
+            .picker-item,
+            .selected-label {
+                font-size: 30px;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .picker-item {
+                transition: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <main class="container">
+        <div id="stage" class="picker-stage">
+
+            <div class="focus-ring" aria-hidden="true">
+                <span class="focus-dot"></span>
+                <span class="focus-dot"></span>
+            </div>
+
+            <div id="wheel" class="picker-wheel"
+                 aria-hidden="true"></div>
+
+            <div id="selectedLabel"
+                 class="selected-label"
+                 aria-live="polite">1 Std</div>
+
+        </div>
+    </main>
+
+    <script>
+        'use strict';
+
+        // Stunden
+        const hours = [
+            '1 Std', '2 Std', '3 Std', '4 Std',
+            '5 Std', '6 Std', '7 Std', '8 Std',
+            '9 Std', '10 Std', '11 Std', '12 Std'
+        ];
+
+        const itemCount = hours.length;
+        const angleStep = 360 / itemCount;
+        const radius = 210;
+        const sensitivity = 0.35;
+
+        const wheel = document.getElementById('wheel');
+        const stage = document.getElementById('stage');
+        const selectedLabel = document.getElementById('selectedLabel');
+
+        let currentAngle = 0;
+        let isDragging = false;
+        let startY = 0;
+        let startAngle = 0;
+        let lastY = 0;
+        let lastTime = 0;
+        let velocity = 0;
+        let animFrame = null;
+        let animationId = 0;
+        let activePointerId = null;
+        let moved = false;
+
+        // Winkel auf den nächstgelegenen gültigen Index abbilden
+        function getSelectedIndex(angle) {
+            const index = Math.round(-angle / angleStep);
+            return Math.max(0, Math.min(itemCount - 1, index));
+        }
+
+        // Drehrad aufbauen
+        function initWheel() {
+            const fragment = document.createDocumentFragment();
+
+            hours.forEach((text, index) => {
+                const item = document.createElement('div');
+
+                item.className = 'picker-item';
+                item.textContent = text;
+                item.dataset.index = index;
+
+                fragment.appendChild(item);
+            });
+
+            wheel.appendChild(fragment);
+            renderRotation(0);
+        }
+
+        // Darstellung aktualisieren
+        function renderRotation(angle) {
+            currentAngle = angle;
+            wheel.style.transform = `rotateX(${angle}deg)`;
+
+            const selectedIndex = getSelectedIndex(angle);
+            selectedLabel.textContent = hours[selectedIndex];
+
+            for (let i = 0; i < itemCount; i++) {
+                const item = wheel.children[i];
+                const baseAngle = i * angleStep;
+
+                item.style.transform =
+                    `rotateX(${baseAngle}deg) translateZ(${radius}px)`;
+
+                let diff = ((baseAngle + angle) % 360 + 360) % 360;
+
+                if (diff > 180) {
+                    diff -= 360;
+                }
+
+                const absDiff = Math.abs(diff);
+
+                // Die ausgewählte Zahl wird ausschließlich
+                // durch das scharfe Overlay angezeigt.
+                if (absDiff < angleStep / 2) {
+                    item.style.opacity = '0';
+                } else if (absDiff < angleStep * 1.8) {
+                    item.style.opacity = '0.38';
+                    item.style.color = '#9ca3af';
+                } else if (absDiff < angleStep * 2.8) {
+                    item.style.opacity = '0.13';
+                    item.style.color = '#6b7280';
+                } else {
+                    item.style.opacity = '0';
+                }
+            }
+        }
+
+        // Animation abbrechen
+        function cancelAnimation() {
+            animationId++;
+
+            if (animFrame !== null) {
+                cancelAnimationFrame(animFrame);
+                animFrame = null;
+            }
+        }
+
+        // Zielwinkel für eine Stunde bestimmen
+        function rotateToIndex(index) {
+            index = Math.max(0, Math.min(itemCount - 1, index));
+
+            cancelAnimation();
+
+            const targetAngle = -index * angleStep;
+            animateToAngle(targetAngle);
+        }
+
+        // Sanftes Einrasten
+        function animateToAngle(targetAngle) {
+            cancelAnimation();
+
+            const thisAnimation = animationId;
+            const startAngle = currentAngle;
+            const change = targetAngle - startAngle;
+            const startTime = performance.now();
+            const duration = 280;
+
+            function step(now) {
+                if (thisAnimation !== animationId) return;
+
+                const progress = Math.min(
+                    (now - startTime) / duration,
+                    1
+                );
+
+                // Ease-out cubic
+                const eased = 1 - Math.pow(1 - progress, 3);
+
+                renderRotation(startAngle + change * eased);
+
+                if (progress < 1) {
+                    animFrame = requestAnimationFrame(step);
+                } else {
+                    renderRotation(targetAngle);
+                    animFrame = null;
+                    hapticFeedback();
+                }
+            }
+
+            animFrame = requestAnimationFrame(step);
+        }
+
+        function snapToNearest() {
+            const index = getSelectedIndex(currentAngle);
+            rotateToIndex(index);
+        }
+
+        // Vibrationsfeedback, sofern verfügbar
+        function hapticFeedback() {
+            if (navigator.vibrate) {
+                navigator.vibrate(10);
+            }
+        }
+
+        // Maus und Touch über Pointer Events
+        function onPointerDown(e) {
+            if (e.pointerType === 'mouse' && e.button !== 0) return;
+
+            cancelAnimation();
+
+            isDragging = true;
+            moved = false;
+            activePointerId = e.pointerId;
+
+            startY = e.clientY;
+            lastY = e.clientY;
+            startAngle = currentAngle;
+            lastTime = performance.now();
+            velocity = 0;
+
+            stage.classList.add('dragging');
+            stage.setPointerCapture(e.pointerId);
+        }
+
+        function onPointerMove(e) {
+            if (!isDragging || e.pointerId !== activePointerId) return;
+
+            const deltaY = e.clientY - startY;
+            const now = performance.now();
+            const dt = now - lastTime;
+
+            if (Math.abs(deltaY) > 3) {
+                moved = true;
+            }
+
+            if (dt > 0) {
+                const instantVelocity = (e.clientY - lastY) / dt;
+
+                // Glättung verhindert abrupte Geschwindigkeitssprünge
+                velocity = velocity * 0.35 + instantVelocity * 0.65;
+            }
+
+            lastY = e.clientY;
+            lastTime = now;
+
+            renderRotation(startAngle - deltaY * sensitivity);
+        }
+
+        function onPointerUp(e) {
+            if (!isDragging || e.pointerId !== activePointerId) return;
+
+            isDragging = false;
+            activePointerId = null;
+            stage.classList.remove('dragging');
+
+            // Nur bei tatsächlicher Bewegung Trägheit anwenden
+            if (Math.abs(velocity) > 0.18 && moved) {
+                const momentum = velocity * 120;
+                const projectedAngle = currentAngle - momentum;
+                const index = getSelectedIndex(projectedAngle);
+
+                rotateToIndex(index);
+            } else {
+                snapToNearest();
+            }
+        }
+
+        function onPointerCancel(e) {
+            if (!isDragging || e.pointerId !== activePointerId) return;
+
+            isDragging = false;
+            activePointerId = null;
+            stage.classList.remove('dragging');
+            snapToNearest();
+        }
+
+        // Mausrad: eine Stunde pro Scrollschritt
+        function onWheelScroll(e) {
+            e.preventDefault();
+
+            cancelAnimation();
+
+            const currentIndex = getSelectedIndex(currentAngle);
+            const direction = e.deltaY > 0 ? 1 : -1;
+            const nextIndex = Math.max(
+                0,
+                Math.min(itemCount - 1, currentIndex + direction)
+            );
+
+            rotateToIndex(nextIndex);
+        }
+
+        stage.addEventListener('pointerdown', onPointerDown);
+        stage.addEventListener('pointermove', onPointerMove);
+        stage.addEventListener('pointerup', onPointerUp);
+        stage.addEventListener('pointercancel', onPointerCancel);
+
+        stage.addEventListener('wheel', onWheelScroll, {
+            passive: false
+        });
+
+        initWheel();
+    </script>
+</body>
+</html>
