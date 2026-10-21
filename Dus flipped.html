@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ankunft / Abflug – Drehbutton</title>
+<style>
+  :root {
+    --airport-blue: #123db7;
+    --airport-blue-dark: #082a91;
+    --airport-white: #fff;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    display: grid;
+    place-items: center;
+    padding: 24px;
+    background: #f0f2f7;
+    font-family: Arial, Helvetica, sans-serif;
+  }
+
+  .page {
+    width: min(100%, 560px);
+    text-align: center;
+  }
+
+  .flip-scene {
+    width: 100%;
+    height: 150px;
+    perspective: 1000px;
+  }
+
+  .flip-button {
+    display: block;
+    position: relative;
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    border: 0;
+    border-radius: 18px;
+    background: transparent;
+    cursor: pointer;
+    color: var(--airport-white);
+    text-align: left;
+    -webkit-tap-highlight-color: transparent;
+    perspective: 1000px;
+  }
+
+  .flip-inner {
+    position: absolute;
+    inset: 0;
+    transform-style: preserve-3d;
+    transition: transform 650ms cubic-bezier(.2,.75,.25,1);
+    border-radius: inherit;
+  }
+
+  .flip-button.is-departures .flip-inner {
+    transform: rotateY(180deg);
+  }
+
+  .face {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    gap: clamp(14px, 4vw, 26px);
+    padding: 22px clamp(18px, 4vw, 30px);
+    overflow: hidden;
+    border: 2px solid rgba(255,255,255,.82);
+    border-radius: inherit;
+    background: linear-gradient(145deg, #1948ce 0%, var(--airport-blue) 55%, var(--airport-blue-dark) 100%);
+    box-shadow: 0 9px 0 #071e69, 0 15px 28px rgba(7, 27, 84, .22);
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+  }
+
+  .face::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    border-radius: inherit;
+    background: linear-gradient(120deg, rgba(255,255,255,.10), transparent 45%);
+  }
+
+  .face.departures { transform: rotateY(180deg); }
+
+  .plane-icon {
+    flex: 0 0 68px;
+    width: 68px;
+    height: 68px;
+    filter: drop-shadow(0 2px 1px rgba(0,0,0,.12));
+    z-index: 1;
+  }
+
+  .label {
+    min-width: 0;
+    position: relative;
+    z-index: 1;
+    color: #fff;
+    font-size: clamp(22px, 5.2vw, 34px);
+    font-weight: 700;
+    line-height: 1.12;
+    letter-spacing: -.7px;
+    white-space: nowrap;
+  }
+
+  .label small {
+    display: block;
+    margin-top: 6px;
+    font-size: clamp(14px, 3.4vw, 20px);
+    font-weight: 500;
+    letter-spacing: .1px;
+  }
+
+  .hint {
+    margin: 28px 0 0;
+    color: #4c5874;
+    font-size: 14px;
+  }
+
+  .flip-button:focus-visible {
+    outline: 4px solid #f0b429;
+    outline-offset: 8px;
+  }
+
+  .flip-button:active .flip-inner {
+    filter: brightness(1.08);
+  }
+
+  @media (max-width: 390px) {
+    .flip-scene { height: 126px; }
+    .plane-icon { flex-basis: 54px; width: 54px; height: 54px; }
+    .face { gap: 14px; padding: 18px; }
+    .label { letter-spacing: -.9px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .flip-inner { transition: none; }
+  }
+</style>
+</head>
+<body>
+  <main class="page">
+    <div class="flip-scene">
+      <button class="flip-button" id="flightToggle"
+              type="button" aria-label="Zwischen Ankunft und Abflug wechseln"
+              aria-pressed="false">
+        <span class="flip-inner">
+          <span class="face arrivals">
+            <!-- Flugzeug landet: Nase nach rechts oben -->
+            <svg class="plane-icon" viewBox="0 0 100 100" aria-hidden="true">
+              <path fill="currentColor" d="M8 62 43 49 56 10Q59 2 65 9L72 43 88 36Q96 33 97 40L97 45 74 61 79 76 91 81Q96 83 94 88L92 91 68 84 51 72 20 80Q12 82 8 75L4 68Q2 64 8 62Z"/>
+              <path fill="currentColor" d="M8 94H92V99H8Z"/>
+            </svg>
+            <span class="label">Ankunft <span aria-hidden="true">·</span> <small>Arrivals</small></span>
+          </span>
+          <span class="face departures">
+            <!-- Flugzeug startet: Nase nach links oben -->
+            <svg class="plane-icon" viewBox="0 0 100 100" aria-hidden="true">
+              <g transform="translate(100 0) scale(-1 1)">
+                <path fill="currentColor" d="M8 62 43 49 56 10Q59 2 65 9L72 43 88 36Q96 33 97 40L97 45 74 61 79 76 91 81Q96 83 94 88L92 91 68 84 51 72 20 80Q12 82 8 75L4 68Q2 64 8 62Z"/>
+              </g>
+              <path fill="currentColor" d="M8 94H92V99H8Z"/>
+            </svg>
+            <span class="label">Abflug <span aria-hidden="true">·</span> <small>Departures</small></span>
+          </span>
+        </span>
+      </button>
+    </div>
+    <p class="hint">Antippen, um zwischen Ankunft und Abflug zu wechseln</p>
+  </main>
+
+<script>
+  const toggle = document.getElementById('flightToggle');
+
+  toggle.addEventListener('click', () => {
+    const isDepartures = toggle.classList.toggle('is-departures');
+    toggle.setAttribute('aria-pressed', String(isDepartures));
+    toggle.setAttribute(
+      'aria-label',
+      isDepartures
+        ? 'Aktuell Abflug. Antippen für Ankunft'
+        : 'Aktuell Ankunft. Antippen für Abflug'
+    );
+  });
+</script>
+</body>
+</html>
