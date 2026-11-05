@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="de" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR-Code Generator Pro</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        ocean: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            500: '#0ea5e9',
+                            800: '#075985',
+                            900: '#0c4a6e',
+                            950: '#082f49',
+                        },
+                        violetTheme: {
+                            500: '#8b5cf6',
+                            600: '#7c3aed',
+                            900: '#4c1d95',
+                            950: '#2e1065',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- FontAwesome für Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- qr-code-styling Library CDN -->
+    <script type="text/javascript" src="https://unpkg.com/qr-code-styling@1.5.0/lib/qr-code-styling.js"></script>
+    
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #090d16 0%, #0c1527 50%, #160d29 100%);
+            min-height: 100vh;
+        }
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.75);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .glass-input {
+            background: rgba(30, 41, 59, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+        }
+        .glass-input:focus {
+            background: rgba(30, 41, 59, 0.9);
+            border-color: #38bdf8;
+            box-shadow: 0 0 15px rgba(56, 189, 248, 0.25);
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: rgba(15, 23, 42, 0.6);
+            border-radius: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(56, 189, 248, 0.3);
+            border-radius: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: rgba(56, 189, 248, 0.5);
+        }
+    </style>
+</head>
+<body class="text-slate-100 p-4 md:p-8 relative overflow-x-hidden min-h-screen flex flex-col justify-between">
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-5 right-5 z-50 transform translate-y-20 opacity-0 transition-all duration-300 ease-in-out flex items-center gap-3 bg-slate-800 text-white px-5 py-3 rounded-xl shadow-2xl border border-slate-700">
+        <i id="toast-icon" class="fas fa-check-circle text-emerald-400 text-xl"></i>
+        <span id="toast-message" class="text-sm font-medium">Benachrichtigung</span>
+    </div>
+
+    <div class="max-w-6xl mx-auto w-full">
+        <!-- Header -->
+        <header class="flex items-center justify-between mb-8 pb-4 border-b border-slate-800">
+            <div class="flex items-center gap-3">
+                <div class="p-3 bg-gradient-to-tr from-cyan-500 to-violet-600 rounded-2xl shadow-lg shadow-cyan-500/20">
+                    <i class="fas fa-qrcode text-2xl text-white"></i>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-bold bg-gradient-to-r from-cyan-400 via-sky-200 to-violet-400 bg-clip-text text-transparent">
+                        QR Studio Pro
+                    </h1>
+                    <p class="text-xs text-slate-400">Erstelle hochauflösende, angepasste QR-Codes</p>
+                </div>
+            </div>
+            <div class="hidden sm:flex items-center gap-2 text-xs text-slate-400 bg-slate-900/60 px-4 py-2 rounded-full border border-slate-800">
+                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Live Vorschau aktiv
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            
+            <!-- Controls Column (Left) -->
+            <div class="lg:col-span-7 space-y-6">
+                
+                <!-- URL Input Box -->
+                <div class="glass-panel rounded-2xl p-6 shadow-xl">
+                    <label for="url-input" class="block text-sm font-semibold mb-2 text-slate-200 flex justify-between">
+                        <span>Ziel-URL eingeben <span class="text-rose-400">*</span></span>
+                        <span id="url-status" class="text-xs font-normal text-slate-400">Gültige URL erforderlich</span>
+                    </label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                            <i class="fas fa-link"></i>
+                        </div>
+                        <input 
+                            type="text" 
+                            id="url-input" 
+                            placeholder="https://beispiel.de" 
+                            value="https://github.com"
+                            class="w-full pl-10 pr-24 py-3.5 rounded-xl glass-input text-white placeholder-slate-500 focus:outline-none transition-all text-sm"
+                        >
+                        <button 
+                            id="btn-generate"
+                            class="absolute right-2 top-2 bottom-2 px-4 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-medium text-xs rounded-lg shadow-md transition-all flex items-center gap-2"
+                        >
+                            <i class="fas fa-wand-magic-sparkles"></i> Erstellen
+                        </button>
+                    </div>
+                    <p id="error-msg" class="mt-2 text-xs text-rose-400 hidden flex items-center gap-1">
+                        <i class="fas fa-exclamation-circle"></i> Bitte eine gültige Webadresse eingeben (z.B. https://domain.de).
+                    </p>
+                </div>
+
+                <!-- Customization Panel -->
+                <div class="glass-panel rounded-2xl p-6 shadow-xl space-y-6">
+                    <h2 class="text-base font-semibold text-slate-200 border-b border-slate-800 pb-3 flex items-center gap-2">
+                        <i class="fas fa-sliders text-cyan-400"></i> Design anpassen
+                    </h2>
+
+                    <!-- Colors -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-medium text-slate-300 mb-2">Vordergrundfarbe</label>
+                            <div class="flex items-center gap-3 bg-slate-900/60 p-2 rounded-xl border border-slate-800">
+                                <input type="color" id="fg-color" value="#0f172a" class="w-10 h-10 rounded-lg cursor-pointer bg-transparent border-0">
+                                <span id="fg-color-hex" class="text-xs font-mono text-slate-300 uppercase">#0F172A</span>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-300 mb-2">Hintergrundfarbe</label>
+                            <div class="flex items-center gap-3 bg-slate-900/60 p-2 rounded-xl border border-slate-800">
+                                <input type="color" id="bg-color" value="#ffffff" class="w-10 h-10 rounded-lg cursor-pointer bg-transparent border-0">
+                                <span id="bg-color-hex" class="text-xs font-mono text-slate-300 uppercase">#FFFFFF</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Size & Dots Style -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label for="qr-size" class="block text-xs font-medium text-slate-300 mb-2">Auflösung / Größe</label>
+                            <select id="qr-size" class="w-full glass-input text-xs rounded-xl p-3 text-slate-200 focus:outline-none">
+                                <option value="250">Klein (250 x 250 px)</option>
+                                <option value="400" selected>Mittel (400 x 400 px)</option>
+                                <option value="800">Groß (800 x 800 px)</option>
+                                <option value="1200">HD Druck (1200 x 1200 px)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="dots-style" class="block text-xs font-medium text-slate-300 mb-2">Muster-Stil</label>
+                            <select id="dots-style" class="w-full glass-input text-xs rounded-xl p-3 text-slate-200 focus:outline-none">
+                                <option value="square">Quadratisch (Klassisch)</option>
+                                <option value="dots">Punkte</option>
+                                <option value="rounded" selected>Abgerundet</option>
+                                <option value="classy">Classy</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Logo Upload / Selection -->
+                    <div>
+                        <label class="block text-xs font-medium text-slate-300 mb-2">Logo im Zentrum (Optional)</label>
+                        <div class="flex flex-wrap items-center gap-3">
+                            <!-- Preset Logos -->
+                            <button data-logo="" class="preset-logo-btn p-2 bg-slate-800 hover:bg-slate-700 rounded-lg border border-cyan-500 text-xs text-slate-300 transition-all flex items-center gap-1">
+                                Kein Logo
+                            </button>
+                            <button data-logo="https://cdn-icons-png.flaticon.com/512/25/25231.png" class="preset-logo-btn p-2 bg-slate-800 hover:bg-slate-700 rounded-lg border border-slate-700 text-xs text-slate-300 transition-all flex items-center gap-1">
+                                <i class="fab fa-github"></i> GitHub
+                            </button>
+                            <button data-logo="https://cdn-icons-png.flaticon.com/512/174/174857.png" class="preset-logo-btn p-2 bg-slate-800 hover:bg-slate-700 rounded-lg border border-slate-700 text-xs text-slate-300 transition-all flex items-center gap-1">
+                                <i class="fab fa-linkedin"></i> LinkedIn
+                            </button>
+                            <button data-logo="https://cdn-icons-png.flaticon.com/512/1384/1384060.png" class="preset-logo-btn p-2 bg-slate-800 hover:bg-slate-700 rounded-lg border border-slate-700 text-xs text-slate-300 transition-all flex items-center gap-1">
+                                <i class="fab fa-youtube text-red-500"></i> YouTube
+                            </button>
+                            
+                            <!-- Custom File Upload -->
+                            <label class="cursor-pointer p-2 bg-slate-800 hover:bg-slate-700 rounded-lg border border-slate-700 text-xs text-slate-300 transition-all flex items-center gap-1">
+                                <i class="fas fa-upload text-cyan-400"></i> Eigenes Logo
+                                <input type="file" id="logo-file" accept="image/*" class="hidden">
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Preview & Action Column (Right) -->
+            <div class="lg:col-span-5 space-y-6">
+                
+                <!-- QR Code Preview Card -->
+                <div class="glass-panel rounded-2xl p-6 shadow-xl flex flex-col items-center justify-center text-center relative">
+                    <span class="absolute top-4 left-4 text-xs font-semibold text-slate-400 uppercase tracking-wider">Vorschau</span>
+                    
+                    <!-- Canvas Container -->
+                    <div class="my-6 p-4 bg-slate-950/80 rounded-2xl border border-slate-800/80 flex items-center justify-center shadow-inner min-h-[260px] min-w-[260px]">
+                        <div id="qrcode-container" class="transition-transform duration-300 hover:scale-105"></div>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="grid grid-cols-2 gap-3 w-full mb-3">
+                        <button id="btn-download-png" class="w-full py-3 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-medium text-xs rounded-xl shadow-lg shadow-cyan-500/20 transition-all flex items-center justify-center gap-2">
+                            <i class="fas fa-download"></i> PNG Herunterladen
+                        </button>
+                        <button id="btn-download-svg" class="w-full py-3 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-medium text-xs rounded-xl transition-all flex items-center justify-center gap-2">
+                            <i class="fas fa-file-code"></i> SVG Herunterladen
+                        </button>
+                    </div>
+                    <button id="btn-copy" class="w-full py-2.5 bg-slate-900/80 hover:bg-slate-800 text-slate-300 border border-slate-800 font-medium text-xs rounded-xl transition-all flex items-center justify-center gap-2">
+                        <i class="fas fa-copy"></i> In Zwischenablage kopieren
+                    </button>
+                </div>
+
+                <!-- History Panel -->
+                <div class="glass-panel rounded-2xl p-6 shadow-xl">
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="text-sm font-semibold text-slate-200 flex items-center gap-2">
+                            <i class="fas fa-history text-violet-400"></i> Historie
+                        </h2>
+                        <button id="btn-clear-history" class="text-xs text-slate-400 hover:text-rose-400 transition-colors">
+                            Löschen
+                        </button>
+                    </div>
+                    
+                    <div id="history-list" class="space-y-2 max-h-48 overflow-y-auto custom-scrollbar pr-1">
+                        <!-- History items generated via JS -->
+                        <p class="text-xs text-slate-500 text-center py-4">Noch keine QR-Codes generiert</p>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="mt-12 text-center text-xs text-slate-500 border-t border-slate-900 pt-6">
+            <p>© 2026 QR Studio Pro — Responsive & Client-side Generator</p>
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // State
+            let logoUrl = '';
+            let history = JSON.parse(localStorage.getItem('qr_history') || '[]');
+
+            // DOM Elements
+            const urlInput = document.getElementById('url-input');
+            const errorMsg = document.getElementById('error-msg');
+            const urlStatus = document.getElementById('url-status');
+            const fgColorInput = document.getElementById('fg-color');
+            const bgColorInput = document.getElementById('bg-color');
+            const fgColorHex = document.getElementById('fg-color-hex');
+            const bgColorHex = document.getElementById('bg-color-hex');
+            const qrSizeSelect = document.getElementById('qr-size');
+            const dotsStyleSelect = document.getElementById('dots-style');
+            const logoFileInput = document.getElementById('logo-file');
+            const presetLogoBtns = document.querySelectorAll('.preset-logo-btn');
+            const qrContainer = document.getElementById('qrcode-container');
+            const btnGenerate = document.getElementById('btn-generate');
+            const btnDownloadPng = document.getElementById('btn-download-png');
+            const btnDownloadSvg = document.getElementById('btn-download-svg');
+            const btnCopy = document.getElementById('btn-copy');
+            const btnClearHistory = document.getElementById('btn-clear-history');
+            const historyList = document.getElementById('history-list');
+
+            // Initialize QRCodeStyling Instance
+            const qrCode = new QRCodeStyling({
+                width: 240,
+                height: 240,
+                type: 'svg',
+                data: urlInput.value,
+                image: '',
+                dotsOptions: {
+                    color: fgColorInput.value,
+                    type: dotsStyleSelect.value
+                },
+                backgroundOptions: {
+                    color: bgColorInput.value,
+                },
+                imageOptions: {
+                    crossOrigin: 'anonymous',
+                    margin: 5,
+                    imageSize: 0.3
+                }
+            });
+
+            // Append Canvas
+            qrContainer.innerHTML = '';
+            qrCode.append(qrContainer);
+
+            // Toast System
+            function showToast(message, isError = false) {
+                const toast = document.getElementById('toast');
+                const toastMessage = document.getElementById('toast-message');
+                const toastIcon = document.getElementById('toast-icon');
+
+                toastMessage.textContent = message;
+                if (isError) {
+                    toastIcon.className = 'fas fa-exclamation-circle text-rose-400 text-xl';
+                } else {
+                    toastIcon.className = 'fas fa-check-circle text-emerald-400 text-xl';
+                }
+
+                toast.classList.remove('translate-y-20', 'opacity-0');
+                toast.classList.add('translate-y-0', 'opacity-100');
+
+                setTimeout(() => {
+                    toast.classList.remove('translate-y-0', 'opacity-100');
+                    toast.classList.add('translate-y-20', 'opacity-0');
+                }, 3000);
+            }
+
+            // URL Validation helper
+            function isValidUrl(string) {
+                try {
+                    const url = new URL(string.startsWith('http://') || string.startsWith('https://') ? string : `https://${string}`);
+                    return url.hostname.includes('.');
+                } catch (_) {
+                    return false;
+                }
+            }
+
+            function getFormattedUrl(val) {
+                if (!val) return '';
+                if (!/^https?:\/\//i.test(val)) {
+                    return 'https://' + val;
+                }
+                return val;
+            }
+
+            // Update QR Code
+            function updateQRCode(saveToHistoryFlag = false) {
+                const rawVal = urlInput.value.trim();
+                
+                if (!rawVal || !isValidUrl(rawVal)) {
+                    errorMsg.classList.remove('hidden');
+                    urlStatus.textContent = 'Ungültige URL';
+                    urlStatus.className = 'text-xs font-normal text-rose-400';
+                    return false;
+                } else {
+                    errorMsg.classList.add('hidden');
+                    urlStatus.textContent = 'Gültige URL';
+                    urlStatus.className = 'text-xs font-normal text-emerald-400';
+                }
+
+                const finalUrl = getFormattedUrl(rawVal);
+
+                qrCode.update({
+                    data: finalUrl,
+                    dotsOptions: {
+                        color: fgColorInput.value,
+                        type: dotsStyleSelect.value
+                    },
+                    backgroundOptions: {
+                        color: bgColorInput.value
+                    },
+                    image: logoUrl
+                });
+
+                if (saveToHistoryFlag) {
+                    addToHistory(finalUrl);
+                }
+
+                return true;
+            }
+
+            // Event Listeners for Live Update
+            urlInput.addEventListener('input', () => updateQRCode(false));
+            
+            fgColorInput.addEventListener('input', (e) => {
+                fgColorHex.textContent = e.target.value.toUpperCase();
+                updateQRCode(false);
+            });
+
+            bgColorInput.addEventListener('input', (e) => {
+                bgColorHex.textContent = e.target.value.toUpperCase();
+                updateQRCode(false);
+            });
+
+            dotsStyleSelect.addEventListener('change', () => updateQRCode(false));
+
+            btnGenerate.addEventListener('click', () => {
+                if (updateQRCode(true)) {
+                    showToast('QR-Code erfolgreich generiert!');
+                }
+            });
+
+            // Preset Logos
+            presetLogoBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    presetLogoBtns.forEach(b => b.classList.replace('border-cyan-500', 'border-slate-700'));
+                    btn.classList.replace('border-slate-700', 'border-cyan-500');
+                    logoUrl = btn.getAttribute('data-logo');
+                    logoFileInput.value = ''; // Reset custom upload
+                    updateQRCode(false);
+                });
+            });
+
+            // Custom Logo Upload
+            logoFileInput.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    if (file.size > 2 * 1024 * 1024) {
+                        showToast('Logo darf maximal 2MB groß sein.', true);
+                        return;
+                    }
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        logoUrl = event.target.result;
+                        presetLogoBtns.forEach(b => b.classList.replace('border-cyan-500', 'border-slate-700'));
+                        updateQRCode(false);
+                        showToast('Eigenes Logo hochgeladen');
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+
+            // Download Handlers
+            btnDownloadPng.addEventListener('click', () => {
+                if (!updateQRCode(true)) return;
+                const size = parseInt(qrSizeSelect.value, 10);
+                qrCode.download({
+                    name: 'qr-code',
+                    extension: 'png',
+                    width: size,
+                    height: size
+                });
+                showToast('PNG Download gestartet');
+            });
+
+            btnDownloadSvg.addEventListener('click', () => {
+                if (!updateQRCode(true)) return;
+                const size = parseInt(qrSizeSelect.value, 10);
+                qrCode.download({
+                    name: 'qr-code',
+                    extension: 'svg',
+                    width: size,
+                    height: size
+                });
+                showToast('SVG Download gestartet');
+            });
+
+            // Copy to Clipboard (as Image)
+            btnCopy.addEventListener('click', async () => {
+                if (!updateQRCode(true)) return;
+                
+                try {
+                    // Temporarily render to a canvas for copying PNG blob
+                    const rawVal = getFormattedUrl(urlInput.value.trim());
+                    const tempQr = new QRCodeStyling({
+                        width: 400,
+                        height: 400,
+                        type: 'canvas',
+                        data: rawVal,
+                        image: logoUrl,
+                        dotsOptions: { color: fgColorInput.value, type: dotsStyleSelect.value },
+                        backgroundOptions: { color: bgColorInput.value },
+                        imageOptions: { crossOrigin: 'anonymous', margin: 5 }
+                    });
+
+                    const blob = await tempQr.getRawData('png');
+                    if (blob) {
+                        const item = new ClipboardItem({ 'image/png': blob });
+                        await navigator.clipboard.write([item]);
+                        showToast('QR-Code Bild in die Zwischenablage kopiert!');
+                    } else {
+                        showToast('Fehler beim Kopieren.', true);
+                    }
+                } catch (err) {
+                    showToast('Zwischenablage wird vom Browser nicht unterstützt.', true);
+                }
+            });
+
+            // History Functions
+            function addToHistory(url) {
+                // Avoid duplicates at top
+                history = history.filter(item => item.url !== url);
+                history.unshift({
+                    url: url,
+                    date: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                });
+                if (history.length > 10) history.pop();
+                localStorage.setItem('qr_history', JSON.stringify(history));
+                renderHistory();
+            }
+
+            function renderHistory() {
+                if (history.length === 0) {
+                    historyList.innerHTML = '<p class="text-xs text-slate-500 text-center py-4">Noch keine QR-Codes generiert</p>';
+                    return;
+                }
+
+                historyList.innerHTML = history.map((item, idx) => `
+                    <div class="flex items-center justify-between p-2.5 bg-slate-900/40 hover:bg-slate-900/80 rounded-xl border border-slate-800/60 transition-all text-xs group">
+                        <div class="truncate max-w-[180px] sm:max-w-[240px] cursor-pointer history-item-click" data-url="${item.url}">
+                            <div class="font-medium text-slate-300 truncate group-hover:text-cyan-400 transition-colors">${item.url}</div>
+                            <div class="text-[10px] text-slate-500">${item.date}</div>
+                        </div>
+                        <div class="flex items-center gap-1">
+                            <button class="p-1.5 text-slate-400 hover:text-white history-item-click" data-url="${item.url}" title="Laden">
+                                <i class="fas fa-arrow-up-right-from-square"></i>
+                            </button>
+                        </div>
+                    </div>
+                `).join('');
+
+                // Add click handlers for history items
+                document.querySelectorAll('.history-item-click').forEach(el => {
+                    el.addEventListener('click', (e) => {
+                        const targetUrl = e.currentTarget.getAttribute('data-url');
+                        urlInput.value = targetUrl;
+                        updateQRCode(false);
+                        showToast('URL aus Historie geladen');
+                    });
+                });
+            }
+
+            btnClearHistory.addEventListener('click', () => {
+                history = [];
+                localStorage.removeItem('qr_history');
+                renderHistory();
+                showToast('Historie geleert');
+            });
+
+            // Initial Execution
+            renderHistory();
+            updateQRCode(false);
+        });
+    </script>
+</body>
+</html>
