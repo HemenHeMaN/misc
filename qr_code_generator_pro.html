@@ -33,8 +33,11 @@
     </script>
     <!-- FontAwesome für Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Google Fonts Inter -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Google Fonts importieren -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600&family=Inter:wght@400;600;700&family=Montserrat:wght@400;600;800&family=Oswald:wght@500;700&family=Pacifico&family=Playfair+Display:wght@600;700&family=Poppins:wght@400;600;700&family=Roboto+Mono:wght@500;700&display=swap" rel="stylesheet">
+    
     <!-- qr-code-styling Library CDN -->
     <script type="text/javascript" src="https://unpkg.com/qr-code-styling@1.5.0/lib/qr-code-styling.js"></script>
     
@@ -94,7 +97,7 @@
                     <h1 class="text-2xl font-bold bg-gradient-to-r from-cyan-400 via-sky-200 to-violet-400 bg-clip-text text-transparent">
                         QR Studio Pro
                     </h1>
-                    <p class="text-xs text-slate-400">Erstelle hochauflösende, angepasste QR-Codes</p>
+                    <p class="text-xs text-slate-400">Erstelle angepasste QR-Codes mit Texten & Schriften</p>
                 </div>
             </div>
             <div class="hidden sm:flex items-center gap-2 text-xs text-slate-400 bg-slate-900/60 px-4 py-2 rounded-full border border-slate-800">
@@ -133,135 +136,300 @@
                         </button>
                     </div>
                     <p id="error-msg" class="mt-2 text-xs text-rose-400 hidden flex items-center gap-1">
-                        <i class="fas fa-exclamation-circle"></i> Bitte eine gültige Webadresse eingeben (z.B. https://domain.de).
+                        <i class="fas fa-exclamation-circle"></i> Bitte eine gültige Webadresse eingeben.
                     </p>
                 </div>
 
                 <!-- Customization Panel -->
                 <div class="glass-panel rounded-2xl p-6 shadow-xl space-y-6">
-                    <h2 class="text-base font-semibold text-slate-200 border-b border-slate-800 pb-3 flex items-center gap-2">
-                        <i class="fas fa-sliders text-cyan-400"></i> Design anpassen
+                    <h2 class="text-base font-semibold text-slate-200 border-b border-slate-800 pb-3 flex items-center justify-between">
+                        <span class="flex items-center gap-2"><i class="fas fa-sliders text-cyan-400"></i> Design & Beschriftung</span>
                     </h2>
 
-                    <!-- Colors -->
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-xs font-medium text-slate-300 mb-2">Vordergrundfarbe</label>
-                            <div class="flex items-center gap-3 bg-slate-900/60 p-2 rounded-xl border border-slate-800">
-                                <input type="color" id="fg-color" value="#0f172a" class="w-10 h-10 rounded-lg cursor-pointer bg-transparent border-0">
-                                <span id="fg-color-hex" class="text-xs font-mono text-slate-300 uppercase">#0F172A</span>
+                    <!-- Customization Tabs -->
+                    <div class="flex border-b border-slate-800 gap-2 pb-2 overflow-x-auto text-xs font-medium custom-scrollbar">
+                        <button id="tab-text-btn" class="tab-btn active-tab px-3 py-2 rounded-lg bg-slate-800 text-cyan-400 border border-cyan-500/30 transition-all flex items-center gap-1.5 whitespace-nowrap">
+                            <i class="fas fa-font"></i> Text & Fonts
+                        </button>
+                        <button id="tab-corners-btn" class="tab-btn px-3 py-2 rounded-lg text-slate-400 hover:text-slate-200 transition-all flex items-center gap-1.5 whitespace-nowrap">
+                            <i class="fas fa-shapes"></i> Ecken-Design
+                        </button>
+                        <button id="tab-pattern-btn" class="tab-btn px-3 py-2 rounded-lg text-slate-400 hover:text-slate-200 transition-all flex items-center gap-1.5 whitespace-nowrap">
+                            <i class="fas fa-grip-dots"></i> Muster & Farben
+                        </button>
+                        <button id="tab-logo-btn" class="tab-btn px-3 py-2 rounded-lg text-slate-400 hover:text-slate-200 transition-all flex items-center gap-1.5 whitespace-nowrap">
+                            <i class="fas fa-image"></i> Logo & Settings
+                        </button>
+                    </div>
+
+                    <!-- TAB 0: TEXT & FONTS -->
+                    <div id="tab-text" class="tab-content space-y-5">
+                        <!-- Header Text -->
+                        <div class="p-4 bg-slate-900/40 rounded-xl border border-slate-800/80 space-y-3">
+                            <div class="flex items-center justify-between">
+                                <label for="header-text" class="text-xs font-semibold text-cyan-300 flex items-center gap-2">
+                                    <i class="fas fa-heading"></i> Überschrift (Header)
+                                </label>
+                            </div>
+                            <input type="text" id="header-text" placeholder="z.B. Scanne mich!" value="SCAN MICH!" class="w-full glass-input text-xs rounded-xl p-2.5 text-slate-200 focus:outline-none">
+                            
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
+                                <div>
+                                    <label for="header-font" class="block text-[11px] font-medium text-slate-400 mb-1">Schriftart</label>
+                                    <select id="header-font" class="w-full glass-input text-xs rounded-xl p-2 text-slate-200 focus:outline-none">
+                                        <option value="Inter" selected>Inter</option>
+                                        <option value="Montserrat">Montserrat</option>
+                                        <option value="Poppins">Poppins</option>
+                                        <option value="Playfair Display">Playfair</option>
+                                        <option value="Oswald">Oswald</option>
+                                        <option value="Roboto Mono">Roboto Mono</option>
+                                        <option value="Pacifico">Pacifico</option>
+                                        <option value="Caveat">Caveat</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label for="header-size" class="block text-[11px] font-medium text-slate-400 mb-1">Größe (px)</label>
+                                    <input type="number" id="header-size" value="18" min="10" max="40" class="w-full glass-input text-xs rounded-xl p-2 text-slate-200 focus:outline-none">
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-medium text-slate-400 mb-1">Farbe</label>
+                                    <div class="flex items-center gap-2 bg-slate-900/80 p-1 rounded-xl border border-slate-800">
+                                        <input type="color" id="header-color" value="#0ea5e9" class="w-6 h-6 rounded-md cursor-pointer bg-transparent border-0">
+                                        <span id="header-color-hex" class="text-[10px] font-mono text-slate-300 uppercase">#0EA5E9</span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
+
+                        <!-- Subtitle Text -->
+                        <div class="p-4 bg-slate-900/40 rounded-xl border border-slate-800/80 space-y-3">
+                            <div class="flex items-center justify-between">
+                                <label for="subtitle-text" class="text-xs font-semibold text-violet-300 flex items-center gap-2">
+                                    <i class="fas fa-paragraph"></i> Untertitel (Subtitle)
+                                </label>
+                            </div>
+                            <input type="text" id="subtitle-text" placeholder="z.B. Besuche unsere Webseite" value="Besuche unsere Webseite" class="w-full glass-input text-xs rounded-xl p-2.5 text-slate-200 focus:outline-none">
+                            
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
+                                <div>
+                                    <label for="subtitle-font" class="block text-[11px] font-medium text-slate-400 mb-1">Schriftart</label>
+                                    <select id="subtitle-font" class="w-full glass-input text-xs rounded-xl p-2 text-slate-200 focus:outline-none">
+                                        <option value="Inter" selected>Inter</option>
+                                        <option value="Montserrat">Montserrat</option>
+                                        <option value="Poppins">Poppins</option>
+                                        <option value="Playfair Display">Playfair</option>
+                                        <option value="Oswald">Oswald</option>
+                                        <option value="Roboto Mono">Roboto Mono</option>
+                                        <option value="Pacifico">Pacifico</option>
+                                        <option value="Caveat">Caveat</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label for="subtitle-size" class="block text-[11px] font-medium text-slate-400 mb-1">Größe (px)</label>
+                                    <input type="number" id="subtitle-size" value="12" min="8" max="30" class="w-full glass-input text-xs rounded-xl p-2 text-slate-200 focus:outline-none">
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-medium text-slate-400 mb-1">Farbe</label>
+                                    <div class="flex items-center gap-2 bg-slate-900/80 p-1 rounded-xl border border-slate-800">
+                                        <input type="color" id="subtitle-color" value="#94a3b8" class="w-6 h-6 rounded-md cursor-pointer bg-transparent border-0">
+                                        <span id="subtitle-color-hex" class="text-[10px] font-mono text-slate-300 uppercase">#94A3B8</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TAB 1: CORNER STYLING -->
+                    <div id="tab-corners" class="tab-content hidden space-y-5">
+                        <!-- Corner Frame -->
+                        <div class="p-4 bg-slate-900/40 rounded-xl border border-slate-800/80 space-y-3">
+                            <div class="flex items-center justify-between">
+                                <label class="text-xs font-semibold text-cyan-300 flex items-center gap-2">
+                                    <i class="far fa-square"></i> Äußerer Ecken-Rahmen (Corner Frame)
+                                </label>
+                            </div>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <div>
+                                    <label for="corner-square-type" class="block text-[11px] font-medium text-slate-400 mb-1">Rahmen-Form</label>
+                                    <select id="corner-square-type" class="w-full glass-input text-xs rounded-xl p-2.5 text-slate-200 focus:outline-none">
+                                        <option value="square">Quadratisch</option>
+                                        <option value="extra-rounded" selected>Abgerundet (Extra)</option>
+                                        <option value="dot">Circle (Rund)</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-medium text-slate-400 mb-1">Rahmen-Farbe</label>
+                                    <div class="flex items-center gap-2 bg-slate-900/80 p-1.5 rounded-xl border border-slate-800">
+                                        <input type="color" id="corner-square-color" value="#0ea5e9" class="w-7 h-7 rounded-md cursor-pointer bg-transparent border-0">
+                                        <span id="corner-square-color-hex" class="text-xs font-mono text-slate-300 uppercase">#0EA5E9</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Corner Ball -->
+                        <div class="p-4 bg-slate-900/40 rounded-xl border border-slate-800/80 space-y-3">
+                            <div class="flex items-center justify-between">
+                                <label class="text-xs font-semibold text-violet-300 flex items-center gap-2">
+                                    <i class="fas fa-circle-dot"></i> Innerer Ecken-Punkt (Corner Ball)
+                                </label>
+                            </div>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <div>
+                                    <label for="corner-dot-type" class="block text-[11px] font-medium text-slate-400 mb-1">Punkt-Form</label>
+                                    <select id="corner-dot-type" class="w-full glass-input text-xs rounded-xl p-2.5 text-slate-200 focus:outline-none">
+                                        <option value="square">Quadratisch</option>
+                                        <option value="dot" selected>Circle (Rund)</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-medium text-slate-400 mb-1">Punkt-Farbe</label>
+                                    <div class="flex items-center gap-2 bg-slate-900/80 p-1.5 rounded-xl border border-slate-800">
+                                        <input type="color" id="corner-dot-color" value="#8b5cf6" class="w-7 h-7 rounded-md cursor-pointer bg-transparent border-0">
+                                        <span id="corner-dot-color-hex" class="text-xs font-mono text-slate-300 uppercase">#8B5CF6</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TAB 2: PATTERN & COLORS -->
+                    <div id="tab-pattern" class="tab-content hidden space-y-5">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label for="dots-style" class="block text-xs font-medium text-slate-300 mb-2">Muster-Stil (Körper)</label>
+                                <select id="dots-style" class="w-full glass-input text-xs rounded-xl p-3 text-slate-200 focus:outline-none">
+                                    <option value="square">Quadratisch (Klassisch)</option>
+                                    <option value="dots">Punkte</option>
+                                    <option value="rounded" selected>Abgerundet</option>
+                                    <option value="classy">Classy</option>
+                                    <option value="classy-rounded">Classy Rounded</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-slate-300 mb-2">Muster-Farbe</label>
+                                <div class="flex items-center gap-3 bg-slate-900/60 p-2 rounded-xl border border-slate-800">
+                                    <input type="color" id="fg-color" value="#0f172a" class="w-8 h-8 rounded-lg cursor-pointer bg-transparent border-0">
+                                    <span id="fg-color-hex" class="text-xs font-mono text-slate-300 uppercase">#0F172A</span>
+                                </div>
+                            </div>
+                        </div>
+
                         <div>
                             <label class="block text-xs font-medium text-slate-300 mb-2">Hintergrundfarbe</label>
                             <div class="flex items-center gap-3 bg-slate-900/60 p-2 rounded-xl border border-slate-800">
-                                <input type="color" id="bg-color" value="#ffffff" class="w-10 h-10 rounded-lg cursor-pointer bg-transparent border-0">
+                                <input type="color" id="bg-color" value="#ffffff" class="w-8 h-8 rounded-lg cursor-pointer bg-transparent border-0">
                                 <span id="bg-color-hex" class="text-xs font-mono text-slate-300 uppercase">#FFFFFF</span>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Size & Dots Style -->
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <!-- TAB 3: LOGO & SETTINGS -->
+                    <div id="tab-logo" class="tab-content hidden space-y-5">
                         <div>
-                            <label for="qr-size" class="block text-xs font-medium text-slate-300 mb-2">Auflösung / Größe</label>
+                            <label class="block text-xs font-medium text-slate-300 mb-2">Zentrales Logo</label>
+                            <div class="flex flex-wrap items-center gap-2.5">
+                                <button data-logo="" class="preset-logo-btn p-2 bg-slate-800 hover:bg-slate-700 rounded-lg border border-cyan-500 text-xs text-slate-300 transition-all flex items-center gap-1">
+                                    Kein Logo
+                                </button>
+                                <button data-logo="https://cdn-icons-png.flaticon.com/512/25/25231.png" class="preset-logo-btn p-2 bg-slate-800 hover:bg-slate-700 rounded-lg border border-slate-700 text-xs text-slate-300 transition-all flex items-center gap-1">
+                                    <i class="fab fa-github"></i> GitHub
+                                </button>
+                                <button data-logo="https://cdn-icons-png.flaticon.com/512/174/174857.png" class="preset-logo-btn p-2 bg-slate-800 hover:bg-slate-700 rounded-lg border border-slate-700 text-xs text-slate-300 transition-all flex items-center gap-1">
+                                    <i class="fab fa-linkedin"></i> LinkedIn
+                                </button>
+                                <button data-logo="https://cdn-icons-png.flaticon.com/512/1384/1384060.png" class="preset-logo-btn p-2 bg-slate-800 hover:bg-slate-700 rounded-lg border border-slate-700 text-xs text-slate-300 transition-all flex items-center gap-1">
+                                    <i class="fab fa-youtube text-red-500"></i> YouTube
+                                </button>
+                                
+                                <label class="cursor-pointer p-2 bg-slate-800 hover:bg-slate-700 rounded-lg border border-slate-700 text-xs text-slate-300 transition-all flex items-center gap-1">
+                                    <i class="fas fa-upload text-cyan-400"></i> Hochladen
+                                    <input type="file" id="logo-file" accept="image/*" class="hidden">
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <div class="flex justify-between items-center mb-1">
+                                    <label for="logo-size" class="text-xs font-medium text-slate-300">Logo-Größe</label>
+                                    <span id="logo-size-val" class="text-[11px] font-mono text-cyan-400">0.3</span>
+                                </div>
+                                <input type="range" id="logo-size" min="0.1" max="0.5" step="0.05" value="0.3" class="w-full accent-cyan-500 bg-slate-800 rounded-lg h-1.5 cursor-pointer">
+                            </div>
+                            <div>
+                                <div class="flex justify-between items-center mb-1">
+                                    <label for="logo-margin" class="text-xs font-medium text-slate-300">Logo-Abstand</label>
+                                    <span id="logo-margin-val" class="text-[11px] font-mono text-cyan-400">5px</span>
+                                </div>
+                                <input type="range" id="logo-margin" min="0" max="20" step="1" value="5" class="w-full accent-cyan-500 bg-slate-800 rounded-lg h-1.5 cursor-pointer">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label for="qr-size" class="block text-xs font-medium text-slate-300 mb-2">Export-Auflösung</label>
                             <select id="qr-size" class="w-full glass-input text-xs rounded-xl p-3 text-slate-200 focus:outline-none">
-                                <option value="250">Klein (250 x 250 px)</option>
                                 <option value="400" selected>Mittel (400 x 400 px)</option>
                                 <option value="800">Groß (800 x 800 px)</option>
                                 <option value="1200">HD Druck (1200 x 1200 px)</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label for="dots-style" class="block text-xs font-medium text-slate-300 mb-2">Muster-Stil</label>
-                            <select id="dots-style" class="w-full glass-input text-xs rounded-xl p-3 text-slate-200 focus:outline-none">
-                                <option value="square">Quadratisch (Klassisch)</option>
-                                <option value="dots">Punkte</option>
-                                <option value="rounded" selected>Abgerundet</option>
-                                <option value="classy">Classy</option>
+                                <option value="2000">Ultra-HD (2000 x 2000 px)</option>
                             </select>
                         </div>
                     </div>
 
-                    <!-- Logo Upload / Selection -->
-                    <div>
-                        <label class="block text-xs font-medium text-slate-300 mb-2">Logo im Zentrum (Optional)</label>
-                        <div class="flex flex-wrap items-center gap-3">
-                            <!-- Preset Logos -->
-                            <button data-logo="" class="preset-logo-btn p-2 bg-slate-800 hover:bg-slate-700 rounded-lg border border-cyan-500 text-xs text-slate-300 transition-all flex items-center gap-1">
-                                Kein Logo
-                            </button>
-                            <button data-logo="https://cdn-icons-png.flaticon.com/512/25/25231.png" class="preset-logo-btn p-2 bg-slate-800 hover:bg-slate-700 rounded-lg border border-slate-700 text-xs text-slate-300 transition-all flex items-center gap-1">
-                                <i class="fab fa-github"></i> GitHub
-                            </button>
-                            <button data-logo="https://cdn-icons-png.flaticon.com/512/174/174857.png" class="preset-logo-btn p-2 bg-slate-800 hover:bg-slate-700 rounded-lg border border-slate-700 text-xs text-slate-300 transition-all flex items-center gap-1">
-                                <i class="fab fa-linkedin"></i> LinkedIn
-                            </button>
-                            <button data-logo="https://cdn-icons-png.flaticon.com/512/1384/1384060.png" class="preset-logo-btn p-2 bg-slate-800 hover:bg-slate-700 rounded-lg border border-slate-700 text-xs text-slate-300 transition-all flex items-center gap-1">
-                                <i class="fab fa-youtube text-red-500"></i> YouTube
-                            </button>
-                            
-                            <!-- Custom File Upload -->
-                            <label class="cursor-pointer p-2 bg-slate-800 hover:bg-slate-700 rounded-lg border border-slate-700 text-xs text-slate-300 transition-all flex items-center gap-1">
-                                <i class="fas fa-upload text-cyan-400"></i> Eigenes Logo
-                                <input type="file" id="logo-file" accept="image/*" class="hidden">
-                            </label>
-                        </div>
-                    </div>
                 </div>
-
             </div>
 
-            <!-- Preview & Action Column (Right) -->
+            <!-- Preview & History Column (Right) -->
             <div class="lg:col-span-5 space-y-6">
-                
-                <!-- QR Code Preview Card -->
-                <div class="glass-panel rounded-2xl p-6 shadow-xl flex flex-col items-center justify-center text-center relative">
-                    <span class="absolute top-4 left-4 text-xs font-semibold text-slate-400 uppercase tracking-wider">Vorschau</span>
-                    
-                    <!-- Canvas Container -->
-                    <div class="my-6 p-4 bg-slate-950/80 rounded-2xl border border-slate-800/80 flex items-center justify-center shadow-inner min-h-[260px] min-w-[260px]">
-                        <div id="qrcode-container" class="transition-transform duration-300 hover:scale-105"></div>
+                <!-- Live Preview Card -->
+                <div class="glass-panel rounded-2xl p-6 shadow-xl flex flex-col items-center justify-center relative overflow-hidden">
+                    <div class="absolute top-4 left-4 flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-cyan-400 animate-ping"></span>
+                        <span class="text-xs font-medium text-slate-400">Vorschau</span>
                     </div>
 
-                    <!-- Actions -->
-                    <div class="grid grid-cols-2 gap-3 w-full mb-3">
-                        <button id="btn-download-png" class="w-full py-3 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-medium text-xs rounded-xl shadow-lg shadow-cyan-500/20 transition-all flex items-center justify-center gap-2">
-                            <i class="fas fa-download"></i> PNG Herunterladen
-                        </button>
-                        <button id="btn-download-svg" class="w-full py-3 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-medium text-xs rounded-xl transition-all flex items-center justify-center gap-2">
-                            <i class="fas fa-file-code"></i> SVG Herunterladen
+                    <!-- Hidden raw QR Container for qr-code-styling library -->
+                    <div id="qrcode-container-hidden" class="hidden"></div>
+
+                    <!-- Canvas Card Overlay Display -->
+                    <div class="my-6 p-4 rounded-2xl shadow-2xl flex items-center justify-center transition-all overflow-hidden" id="card-preview-bg" style="background-color: #ffffff;">
+                        <canvas id="composite-canvas" class="max-w-full h-auto rounded-lg"></canvas>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="w-full space-y-3">
+                        <div class="grid grid-cols-2 gap-3">
+                            <button id="btn-download-png" class="py-3 px-4 bg-gradient-to-r from-cyan-500 to-sky-600 hover:from-cyan-400 hover:to-sky-500 text-white font-semibold text-xs rounded-xl shadow-lg transition-all flex items-center justify-center gap-2">
+                                <i class="fas fa-file-image"></i> PNG Download
+                            </button>
+                            <button id="btn-download-svg" class="py-3 px-4 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white font-semibold text-xs rounded-xl shadow-lg transition-all flex items-center justify-center gap-2">
+                                <i class="fas fa-file-code"></i> SVG Vector
+                            </button>
+                        </div>
+                        <button id="btn-copy" class="w-full py-2.5 px-4 bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium text-xs rounded-xl border border-slate-700 transition-all flex items-center justify-center gap-2">
+                            <i class="fas fa-copy"></i> In Zwischenablage kopieren
                         </button>
                     </div>
-                    <button id="btn-copy" class="w-full py-2.5 bg-slate-900/80 hover:bg-slate-800 text-slate-300 border border-slate-800 font-medium text-xs rounded-xl transition-all flex items-center justify-center gap-2">
-                        <i class="fas fa-copy"></i> In Zwischenablage kopieren
-                    </button>
                 </div>
 
-                <!-- History Panel -->
-                <div class="glass-panel rounded-2xl p-6 shadow-xl">
-                    <div class="flex items-center justify-between mb-4">
-                        <h2 class="text-sm font-semibold text-slate-200 flex items-center gap-2">
+                <!-- History Card -->
+                <div class="glass-panel rounded-2xl p-6 shadow-xl space-y-4">
+                    <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                        <h3 class="text-sm font-semibold text-slate-200 flex items-center gap-2">
                             <i class="fas fa-history text-violet-400"></i> Historie
-                        </h2>
-                        <button id="btn-clear-history" class="text-xs text-slate-400 hover:text-rose-400 transition-colors">
-                            Löschen
+                        </h3>
+                        <button id="btn-clear-history" class="text-xs text-slate-500 hover:text-rose-400 transition-colors">
+                            Leeren
                         </button>
                     </div>
-                    
-                    <div id="history-list" class="space-y-2 max-h-48 overflow-y-auto custom-scrollbar pr-1">
+                    <div id="history-list" class="space-y-2 max-h-[220px] overflow-y-auto custom-scrollbar pr-1">
                         <!-- History items generated via JS -->
-                        <p class="text-xs text-slate-500 text-center py-4">Noch keine QR-Codes generiert</p>
                     </div>
                 </div>
-
             </div>
-        </div>
 
-        <!-- Footer -->
-        <footer class="mt-12 text-center text-xs text-slate-500 border-t border-slate-900 pt-6">
-            <p>© 2026 QR Studio Pro — Responsive & Client-side Generator</p>
-        </footer>
+        </div>
     </div>
 
     <script>
@@ -274,15 +442,49 @@
             const urlInput = document.getElementById('url-input');
             const errorMsg = document.getElementById('error-msg');
             const urlStatus = document.getElementById('url-status');
+            
+            // Text & Font Inputs
+            const headerTextInput = document.getElementById('header-text');
+            const headerFontSelect = document.getElementById('header-font');
+            const headerSizeInput = document.getElementById('header-size');
+            const headerColorInput = document.getElementById('header-color');
+            const headerColorHex = document.getElementById('header-color-hex');
+
+            const subtitleTextInput = document.getElementById('subtitle-text');
+            const subtitleFontSelect = document.getElementById('subtitle-font');
+            const subtitleSizeInput = document.getElementById('subtitle-size');
+            const subtitleColorInput = document.getElementById('subtitle-color');
+            const subtitleColorHex = document.getElementById('subtitle-color-hex');
+
+            // Colors & Pattern
             const fgColorInput = document.getElementById('fg-color');
             const bgColorInput = document.getElementById('bg-color');
             const fgColorHex = document.getElementById('fg-color-hex');
             const bgColorHex = document.getElementById('bg-color-hex');
-            const qrSizeSelect = document.getElementById('qr-size');
             const dotsStyleSelect = document.getElementById('dots-style');
+
+            // Corner Styling Controls
+            const cornerSquareTypeSelect = document.getElementById('corner-square-type');
+            const cornerSquareColorInput = document.getElementById('corner-square-color');
+            const cornerSquareColorHex = document.getElementById('corner-square-color-hex');
+
+            const cornerDotTypeSelect = document.getElementById('corner-dot-type');
+            const cornerDotColorInput = document.getElementById('corner-dot-color');
+            const cornerDotColorHex = document.getElementById('corner-dot-color-hex');
+
+            // Logo & Size
+            const logoSizeInput = document.getElementById('logo-size');
+            const logoSizeVal = document.getElementById('logo-size-val');
+            const logoMarginInput = document.getElementById('logo-margin');
+            const logoMarginVal = document.getElementById('logo-margin-val');
+            const qrSizeSelect = document.getElementById('qr-size');
             const logoFileInput = document.getElementById('logo-file');
             const presetLogoBtns = document.querySelectorAll('.preset-logo-btn');
-            const qrContainer = document.getElementById('qrcode-container');
+            
+            const qrContainerHidden = document.getElementById('qrcode-container-hidden');
+            const compositeCanvas = document.getElementById('composite-canvas');
+            const cardPreviewBg = document.getElementById('card-preview-bg');
+
             const btnGenerate = document.getElementById('btn-generate');
             const btnDownloadPng = document.getElementById('btn-download-png');
             const btnDownloadSvg = document.getElementById('btn-download-svg');
@@ -290,30 +492,57 @@
             const btnClearHistory = document.getElementById('btn-clear-history');
             const historyList = document.getElementById('history-list');
 
+            // Tab Navigation
+            const tabs = [
+                { btn: document.getElementById('tab-text-btn'), content: document.getElementById('tab-text') },
+                { btn: document.getElementById('tab-corners-btn'), content: document.getElementById('tab-corners') },
+                { btn: document.getElementById('tab-pattern-btn'), content: document.getElementById('tab-pattern') },
+                { btn: document.getElementById('tab-logo-btn'), content: document.getElementById('tab-logo') }
+            ];
+
+            tabs.forEach(({ btn, content }) => {
+                btn.addEventListener('click', () => {
+                    tabs.forEach(t => {
+                        t.btn.classList.remove('bg-slate-800', 'text-cyan-400', 'border', 'border-cyan-500/30');
+                        t.btn.classList.add('text-slate-400');
+                        t.content.classList.add('hidden');
+                    });
+                    btn.classList.add('bg-slate-800', 'text-cyan-400', 'border', 'border-cyan-500/30');
+                    btn.classList.remove('text-slate-400');
+                    content.classList.remove('hidden');
+                });
+            });
+
             // Initialize QRCodeStyling Instance
             const qrCode = new QRCodeStyling({
-                width: 240,
-                height: 240,
-                type: 'svg',
+                width: 300,
+                height: 300,
+                type: 'canvas',
                 data: urlInput.value,
                 image: '',
                 dotsOptions: {
                     color: fgColorInput.value,
                     type: dotsStyleSelect.value
                 },
+                cornersSquareOptions: {
+                    type: cornerSquareTypeSelect.value,
+                    color: cornerSquareColorInput.value
+                },
+                cornersDotOptions: {
+                    type: cornerDotTypeSelect.value,
+                    color: cornerDotColorInput.value
+                },
                 backgroundOptions: {
                     color: bgColorInput.value,
                 },
                 imageOptions: {
                     crossOrigin: 'anonymous',
-                    margin: 5,
-                    imageSize: 0.3
+                    margin: parseInt(logoMarginInput.value, 10),
+                    imageSize: parseFloat(logoSizeInput.value)
                 }
             });
 
-            // Append Canvas
-            qrContainer.innerHTML = '';
-            qrCode.append(qrContainer);
+            qrCode.append(qrContainerHidden);
 
             // Toast System
             function showToast(message, isError = false) {
@@ -355,8 +584,72 @@
                 return val;
             }
 
-            // Update QR Code
-            function updateQRCode(saveToHistoryFlag = false) {
+            // Draw Canvas with Text Header & Subtitle
+            async function renderCompositeCanvas(targetCanvas, baseQrDimension = 300) {
+                const ctx = targetCanvas.getContext('2d');
+                const headerText = headerTextInput.value.trim();
+                const subtitleText = subtitleTextInput.value.trim();
+                const headerFont = headerFontSelect.value;
+                const subtitleFont = subtitleFontSelect.value;
+                
+                // Scale factors based on resolution
+                const scale = baseQrDimension / 300;
+                const hSize = parseInt(headerSizeInput.value, 10) * scale;
+                const sSize = parseInt(subtitleSizeInput.value, 10) * scale;
+                const padding = 20 * scale;
+
+                let topPadding = padding;
+                let bottomPadding = padding;
+
+                if (headerText) topPadding += hSize + (10 * scale);
+                if (subtitleText) bottomPadding += sSize + (10 * scale);
+
+                const qrWidth = baseQrDimension;
+                const qrHeight = baseQrDimension;
+
+                const canvasWidth = qrWidth + (padding * 2);
+                const canvasHeight = qrHeight + topPadding + bottomPadding;
+
+                targetCanvas.width = canvasWidth;
+                targetCanvas.height = canvasHeight;
+
+                // Fill Background
+                ctx.fillStyle = bgColorInput.value;
+                ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+
+                // Draw Header Text
+                if (headerText) {
+                    ctx.font = `bold ${hSize}px "${headerFont}", sans-serif`;
+                    ctx.fillStyle = headerColorInput.value;
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(headerText, canvasWidth / 2, padding + (hSize / 2));
+                }
+
+                // Render QR Code onto canvas
+                const rawBlob = await qrCode.getRawData('png');
+                if (rawBlob) {
+                    const img = new Image();
+                    await new Promise((resolve) => {
+                        img.onload = resolve;
+                        img.src = URL.createObjectURL(rawBlob);
+                    });
+                    ctx.drawImage(img, padding, topPadding, qrWidth, qrHeight);
+                    URL.revokeObjectURL(img.src);
+                }
+
+                // Draw Subtitle Text
+                if (subtitleText) {
+                    ctx.font = `${sSize}px "${subtitleFont}", sans-serif`;
+                    ctx.fillStyle = subtitleColorInput.value;
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(subtitleText, canvasWidth / 2, canvasHeight - padding - (sSize / 2));
+                }
+            }
+
+            // Update QR Code & Render Preview
+            async function updateQRCode(saveToHistoryFlag = false) {
                 const rawVal = urlInput.value.trim();
                 
                 if (!rawVal || !isValidUrl(rawVal)) {
@@ -372,17 +665,38 @@
 
                 const finalUrl = getFormattedUrl(rawVal);
 
+                // Sync Card preview background color
+                cardPreviewBg.style.backgroundColor = bgColorInput.value;
+
                 qrCode.update({
                     data: finalUrl,
                     dotsOptions: {
                         color: fgColorInput.value,
                         type: dotsStyleSelect.value
                     },
+                    cornersSquareOptions: {
+                        type: cornerSquareTypeSelect.value,
+                        color: cornerSquareColorInput.value
+                    },
+                    cornersDotOptions: {
+                        type: cornerDotTypeSelect.value,
+                        color: cornerDotColorInput.value
+                    },
                     backgroundOptions: {
                         color: bgColorInput.value
                     },
-                    image: logoUrl
+                    image: logoUrl,
+                    imageOptions: {
+                        crossOrigin: 'anonymous',
+                        margin: parseInt(logoMarginInput.value, 10),
+                        imageSize: parseFloat(logoSizeInput.value)
+                    }
                 });
+
+                // Render Canvas Preview
+                setTimeout(async () => {
+                    await renderCompositeCanvas(compositeCanvas, 300);
+                }, 100);
 
                 if (saveToHistoryFlag) {
                     addToHistory(finalUrl);
@@ -391,9 +705,25 @@
                 return true;
             }
 
-            // Event Listeners for Live Update
-            urlInput.addEventListener('input', () => updateQRCode(false));
-            
+            // Input Listeners
+            [urlInput, headerTextInput, subtitleTextInput, headerSizeInput, subtitleSizeInput].forEach(el => {
+                el.addEventListener('input', () => updateQRCode(false));
+            });
+
+            [headerFontSelect, subtitleFontSelect, dotsStyleSelect, cornerSquareTypeSelect, cornerDotTypeSelect].forEach(el => {
+                el.addEventListener('change', () => updateQRCode(false));
+            });
+
+            headerColorInput.addEventListener('input', (e) => {
+                headerColorHex.textContent = e.target.value.toUpperCase();
+                updateQRCode(false);
+            });
+
+            subtitleColorInput.addEventListener('input', (e) => {
+                subtitleColorHex.textContent = e.target.value.toUpperCase();
+                updateQRCode(false);
+            });
+
             fgColorInput.addEventListener('input', (e) => {
                 fgColorHex.textContent = e.target.value.toUpperCase();
                 updateQRCode(false);
@@ -404,11 +734,29 @@
                 updateQRCode(false);
             });
 
-            dotsStyleSelect.addEventListener('change', () => updateQRCode(false));
+            cornerSquareColorInput.addEventListener('input', (e) => {
+                cornerSquareColorHex.textContent = e.target.value.toUpperCase();
+                updateQRCode(false);
+            });
+
+            cornerDotColorInput.addEventListener('input', (e) => {
+                cornerDotColorHex.textContent = e.target.value.toUpperCase();
+                updateQRCode(false);
+            });
+
+            logoSizeInput.addEventListener('input', (e) => {
+                logoSizeVal.textContent = e.target.value;
+                updateQRCode(false);
+            });
+
+            logoMarginInput.addEventListener('input', (e) => {
+                logoMarginVal.textContent = `${e.target.value}px`;
+                updateQRCode(false);
+            });
 
             btnGenerate.addEventListener('click', () => {
                 if (updateQRCode(true)) {
-                    showToast('QR-Code erfolgreich generiert!');
+                    showToast('QR-Code & Text aktualisiert!');
                 }
             });
 
@@ -418,7 +766,7 @@
                     presetLogoBtns.forEach(b => b.classList.replace('border-cyan-500', 'border-slate-700'));
                     btn.classList.replace('border-slate-700', 'border-cyan-500');
                     logoUrl = btn.getAttribute('data-logo');
-                    logoFileInput.value = ''; // Reset custom upload
+                    logoFileInput.value = '';
                     updateQRCode(false);
                 });
             });
@@ -442,24 +790,27 @@
                 }
             });
 
-            // Download Handlers
-            btnDownloadPng.addEventListener('click', () => {
+            // PNG Download with Text
+            btnDownloadPng.addEventListener('click', async () => {
                 if (!updateQRCode(true)) return;
-                const size = parseInt(qrSizeSelect.value, 10);
-                qrCode.download({
-                    name: 'qr-code',
-                    extension: 'png',
-                    width: size,
-                    height: size
-                });
+
+                const exportSize = parseInt(qrSizeSelect.value, 10);
+                const exportCanvas = document.createElement('canvas');
+                await renderCompositeCanvas(exportCanvas, exportSize);
+
+                const link = document.createElement('a');
+                link.download = 'qr-code-with-text.png';
+                link.href = exportCanvas.toDataURL('image/png');
+                link.click();
                 showToast('PNG Download gestartet');
             });
 
+            // SVG Vector Download
             btnDownloadSvg.addEventListener('click', () => {
                 if (!updateQRCode(true)) return;
                 const size = parseInt(qrSizeSelect.value, 10);
                 qrCode.download({
-                    name: 'qr-code',
+                    name: 'qr-code-vector',
                     extension: 'svg',
                     width: size,
                     height: size
@@ -467,40 +818,30 @@
                 showToast('SVG Download gestartet');
             });
 
-            // Copy to Clipboard (as Image)
+            // Copy PNG with Text to Clipboard
             btnCopy.addEventListener('click', async () => {
                 if (!updateQRCode(true)) return;
                 
                 try {
-                    // Temporarily render to a canvas for copying PNG blob
-                    const rawVal = getFormattedUrl(urlInput.value.trim());
-                    const tempQr = new QRCodeStyling({
-                        width: 400,
-                        height: 400,
-                        type: 'canvas',
-                        data: rawVal,
-                        image: logoUrl,
-                        dotsOptions: { color: fgColorInput.value, type: dotsStyleSelect.value },
-                        backgroundOptions: { color: bgColorInput.value },
-                        imageOptions: { crossOrigin: 'anonymous', margin: 5 }
-                    });
+                    const exportCanvas = document.createElement('canvas');
+                    await renderCompositeCanvas(exportCanvas, 600);
 
-                    const blob = await tempQr.getRawData('png');
-                    if (blob) {
-                        const item = new ClipboardItem({ 'image/png': blob });
-                        await navigator.clipboard.write([item]);
-                        showToast('QR-Code Bild in die Zwischenablage kopiert!');
-                    } else {
-                        showToast('Fehler beim Kopieren.', true);
-                    }
+                    exportCanvas.toBlob(async (blob) => {
+                        if (blob) {
+                            const item = new ClipboardItem({ 'image/png': blob });
+                            await navigator.clipboard.write([item]);
+                            showToast('QR-Code samt Text in Zwischenablage kopiert!');
+                        } else {
+                            showToast('Fehler beim Kopieren.', true);
+                        }
+                    });
                 } catch (err) {
-                    showToast('Zwischenablage wird vom Browser nicht unterstützt.', true);
+                    showToast('Zwischenablage wird nicht unterstützt.', true);
                 }
             });
 
             // History Functions
             function addToHistory(url) {
-                // Avoid duplicates at top
                 history = history.filter(item => item.url !== url);
                 history.unshift({
                     url: url,
@@ -517,7 +858,7 @@
                     return;
                 }
 
-                historyList.innerHTML = history.map((item, idx) => `
+                historyList.innerHTML = history.map((item) => `
                     <div class="flex items-center justify-between p-2.5 bg-slate-900/40 hover:bg-slate-900/80 rounded-xl border border-slate-800/60 transition-all text-xs group">
                         <div class="truncate max-w-[180px] sm:max-w-[240px] cursor-pointer history-item-click" data-url="${item.url}">
                             <div class="font-medium text-slate-300 truncate group-hover:text-cyan-400 transition-colors">${item.url}</div>
@@ -531,7 +872,6 @@
                     </div>
                 `).join('');
 
-                // Add click handlers for history items
                 document.querySelectorAll('.history-item-click').forEach(el => {
                     el.addEventListener('click', (e) => {
                         const targetUrl = e.currentTarget.getAttribute('data-url');
@@ -551,7 +891,9 @@
 
             // Initial Execution
             renderHistory();
-            updateQRCode(false);
+            setTimeout(() => {
+                updateQRCode(false);
+            }, 300);
         });
     </script>
 </body>
