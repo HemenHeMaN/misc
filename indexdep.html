@@ -468,11 +468,11 @@ h1 { color: var(--heading-color); font-size: 1.4rem; margin: 0; }
 .flip-back { background: #0f172a; border: 1px solid rgba(51, 65, 85, .6); transform: rotateX(-180deg); }
 .flip-front:hover { background: #1e40af; }
 .flip-back:hover { background: #1e293b; }
-.flip-icon { font-size: 18px; }
-.flip-text { display: flex; flex-direction: column; align-items: flex-start; line-height: 1.25; }
-.flip-text b { font-size: 14px; font-weight: 700; letter-spacing: .025em; }
-.flip-text small { font-size: 10px; font-family: var(--tf-data); text-transform: uppercase; letter-spacing: .05em; opacity: .75; }
-.flip-rot { font-size: 12px; opacity: .5; margin-left: 8px; }
+.flip-icon { font-size: 24px; }
+.flip-text { display: flex; flex-direction: row; align-items: baseline; gap: 8px; line-height: 1.1; }
+.flip-text b { font-size: 18px; font-weight: 700; letter-spacing: .025em; }
+.flip-text small { font-size: 13px; font-family: var(--tf-data); text-transform: uppercase; letter-spacing: .05em; opacity: .75; }
+.flip-text small::before { content: "•"; margin-right: 8px; }
 
 /* --- Nach-oben-Button (Overlay) --- */
 .to-top {
@@ -681,14 +681,10 @@ h1 { color: var(--heading-color); font-size: 1.4rem; margin: 0; }
         <div class="flip-card-inner" id="modeFlipCard">
             <div class="flip-face flip-front">
                 <i class="fa-solid fa-plane-departure flip-icon"></i>
-                <div class="flip-text"><b>Abflüge</b><small>Departures</small></div>
-                <i class="fa-solid fa-rotate-right flip-rot"></i>
-            </div>
+                <div class="flip-text"><b>Abflüge</b><small>Departures</small></div>            </div>
             <div class="flip-face flip-back">
                 <i class="fa-solid fa-plane-arrival flip-icon"></i>
-                <div class="flip-text"><b>Ankünfte</b><small>Arrivals</small></div>
-                <i class="fa-solid fa-rotate-left flip-rot"></i>
-            </div>
+                <div class="flip-text"><b>Ankünfte</b><small>Arrivals</small></div>            </div>
         </div>
     </button>
 </div>
